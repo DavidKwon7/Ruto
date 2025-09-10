@@ -81,9 +81,12 @@ fun GoogleSignInButton() {
         val digest = md.digest(bytes)
         val hashedNonce = digest.fold("") { str, it -> str + "%02x".format(it) }
 
+        Log.i("상수 확인", AppConstants.WEB_CLIENT_ID)
+
         val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId("602387918082-rfct3i0kpncv8p3jr5nsjchp16u9ac7v.apps.googleusercontent.com")
+            //.setServerClientId("602387918082-rfct3i0kpncv8p3jr5nsjchp16u9ac7v.apps.googleusercontent.com")
+            .setServerClientId(AppConstants.WEB_CLIENT_ID)
             .setNonce(hashedNonce)
             .build()
 
