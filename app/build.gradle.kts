@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -12,6 +13,12 @@ android {
     namespace = "com.example.ruto"
     compileSdk = 36
 
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("locallocal.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    }
+
     defaultConfig {
         applicationId = "com.example.ruto"
         minSdk = 24
@@ -20,15 +27,35 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "https://default.supabase.co")}\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY", "default-key")}\"")
+        buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID", "default-client-id")}\"")
+        buildConfigField("boolean", "IS_DEBUG", "true")
     }
 
     buildTypes {
+        debug {
+            isMinifyEnabled = false
+            isDebuggable = true
+
+            // BuildConfig 필드들을 buildTypes에서 설정
+            buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "https://default.supabase.co")}\"")
+            buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY", "default-key")}\"")
+            buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID", "default-client-id")}\"")
+            buildConfigField("boolean", "IS_DEBUG", "true")
+
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL", "https://default.supabase.co")}\"")
+            buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY", "default-key")}\"")
+            buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID", "default-client-id")}\"")
+            buildConfigField("boolean", "IS_DEBUG", "false")
         }
         create("benchmark") {
             initWith(buildTypes.getByName("release"))
@@ -52,6 +79,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -81,9 +109,20 @@ dependencies {
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
 
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.2.2"))
+   /* implementation(platform("io.github.jan-tennert.supabase:bom:3.2.2"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:gotrue-kt")
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
 
-    implementation("io.ktor:ktor-client-android:3.2.3")
+
+    implementation("io.ktor:ktor-client-android:3.2.3")*/
+    // Supabase BOM으로 버전 관리
+    implementation(platform(libs.supabase.bom))
+
+    // Supabase 라이브러리들 (BOM에서 버전 자동 관리)
+    implementation(libs.bundles.supabase)
+    implementation(libs.play.services.auth)
+
+    // Ktor
+    implementation(libs.ktor.client.android)
 }
