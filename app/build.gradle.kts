@@ -125,6 +125,7 @@ dependencies {
     // implementation("io.github.jan-tennert.supabase:gotrue-kt")
     implementation("com.google.android.gms:play-services-auth:21.4.0")
 
+    implementation(libs.kakao.sdk.user)
 
     implementation("io.ktor:ktor-client-android:3.2.3")
 }
