@@ -25,12 +25,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.navigation.compose.rememberNavController
 import com.example.ruto.ui.theme.RutoTheme
 import com.example.ruto.util.AppConstants
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.russhwolf.settings.no_arg.BuildConfig
+import com.kakao.sdk.common.KakaoSdk
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -52,6 +53,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RutoTheme {
+                // KakaoSdk.init(this, "036bf851dcd2a8d3d37ed0bc3c35b85d")
+                KakaoSdk.init(this, BuildConfig.KAKAO_NATIVE_APP_KEY)
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -60,7 +63,9 @@ class MainActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        GoogleSignInButton()
+                        // GoogleSignInButton()
+                        val navController = rememberNavController()
+                        AppNavHost(navController)
                     }
                 }
             }

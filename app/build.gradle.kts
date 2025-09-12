@@ -34,6 +34,7 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY")}\"")
         buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID")}\"")
+        buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY")}\"")
         buildConfigField("boolean", "IS_DEBUG", "true")
     }
 
@@ -49,6 +50,7 @@ android {
             buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL")}\"")
             buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY")}\"")
             buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID")}\"")
+            buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY")}\"")
 
             buildConfigField("boolean", "IS_DEBUG", "true")
 
@@ -120,6 +122,8 @@ dependencies {
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
 
+    implementation("androidx.navigation:navigation-compose:2.8.0")
+
     implementation(platform("io.github.jan-tennert.supabase:bom:3.2.2"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     // implementation("io.github.jan-tennert.supabase:gotrue-kt")
@@ -128,4 +132,13 @@ dependencies {
     implementation(libs.kakao.sdk.user)
 
     implementation("io.ktor:ktor-client-android:3.2.3")
+    /*implementation("androidx.navigation:navigation-compose:2.9.4")
+
+    implementation("com.google.dagger:hilt-android:2.52")
+    kapt("com.google.dagger:hilt-compiler:2.52")
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // splash screen
+    implementation("androidx.core:core-splashscreen:1.0.1")*/
 }

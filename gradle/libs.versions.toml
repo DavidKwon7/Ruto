@@ -19,6 +19,7 @@ ktor = "3.2.3"
 play-services-auth = "21.4.0"
 
 kakao-sdk = "2.20.6"
+navigationComposeJvmstubs = "2.9.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,6 +57,7 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 
 kakao-sdk-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao-sdk" }
+androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
 
 
 [plugins]
