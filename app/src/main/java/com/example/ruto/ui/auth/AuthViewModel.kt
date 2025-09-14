@@ -39,20 +39,24 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null) }
             try {
-                val payload = provider.acquireIdToken(activity)
-                val social = when (provider.name) {
-                    "Google" -> SocialProvider.Google
-                    "Kakao" -> SocialProvider.Kakao
-                    else -> error("Unsupported")
-                }
-                repo.signInWithIdToken(social, payload)
-                    .onFailure {
-                        val msg = it.message ?: "Sign-in failed"
-                        _uiState.update { it.copy(error = msg) }
-                        _events.emit(UiEvent.ShowSnackbar(msg))
+                when (provider.name) {
+                    "Google" -> {
+                        val payload = provider.acquireIdToken(activity)
+                        repo.signInWithIdToken(SocialProvider.Google, payload)
+                            .onFailure {
+                                val msg = it.message ?: "Sign-in failed"
+                                _uiState.update { s -> s.copy(error = msg) }
+                                _events.emit(UiEvent.ShowSnackbar(msg))
+                            }
                     }
+                    "Kakao" -> {
+                        // 브라우저 OAuth 시작 (세션 반영은 딥링크 콜백 후 자동)
+                        provider.startOAuth(activity)
+                    }
+                    else -> error("Unsupported provider: ${provider.name}")
+                }
             } catch (e: Exception) {
-                logger.e("AuthVM", "acquireIdToken fail", e)
+                logger.e("AuthVM", "signIn(${provider.name}) fail", e)
                 val msg = e.message ?: "Sign-in error"
                 _uiState.update { it.copy(error = msg) }
                 _events.emit(UiEvent.ShowSnackbar(msg))
@@ -61,6 +65,7 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
 
     fun signOut() {
         viewModelScope.launch {

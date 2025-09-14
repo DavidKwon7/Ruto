@@ -17,6 +17,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.ExternalAuthAction
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import javax.inject.Singleton
@@ -44,6 +45,9 @@ object AppModule {
             install(Auth) {
                 scheme = "io.supabase"
                 host = "callback"
+
+                // 외부 브라우저 대신 Custom Tabs 선호
+                defaultExternalAuthAction = ExternalAuthAction.CustomTabs()
             }
             install(Postgrest)
         }
@@ -56,10 +60,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthProviders(): List<AuthProvider> =
+    fun provideAuthProviders(
+        supabase: SupabaseClient
+    ): List<AuthProvider> =
         listOf(
             GoogleAuthProvider(BuildConfig.WEB_CLIENT_ID),
-            KakaoAuthProvider()
+            KakaoAuthProvider(supabase)
             // NaverAuthProvider(...) 추가 가능
         )
 

@@ -12,6 +12,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.Kakao
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,25 @@ class AuthRepository @Inject constructor(
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            runCatching { supabase.auth.currentSessionOrNull() }
+            supabase.auth.sessionStatus.collect { status ->
+                when(status) {
+                    SessionStatus.Initializing -> _authState.value = AuthState.Loading
+                    is SessionStatus.NotAuthenticated -> _authState.value = AuthState.SignedOut
+                    is SessionStatus.Authenticated -> {
+                        val s = status.session
+                        s.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+                        _authState.value = AuthState.SignedIn(
+                            userId = s.user?.id.orEmpty(),
+                            email = s.user?.email
+                        )
+                        logger.d("AuthRepository", "session authenticated: ${s.user?.id}")
+                    }
+                    is SessionStatus.RefreshFailure -> {
+                        _authState.value = AuthState.SignedOut
+                    }
+                }
+            }
+            /*runCatching { supabase.auth.currentSessionOrNull() }
                 .onSuccess { session ->
                     if (session != null) {
                         _authState.value = AuthState.SignedIn(
@@ -47,7 +66,7 @@ class AuthRepository @Inject constructor(
                 .onFailure { exception ->
                     logger.e("AuthRepository", "restore session failed", exception)
                     _authState.value = AuthState.SignedOut
-                }
+                }*/
         }
     }
 
@@ -63,18 +82,16 @@ class AuthRepository @Inject constructor(
                     payload.rawNonce?.let { nonce = it }
                 }
 
-                SocialProvider.Kakao -> supabase.auth.signInWith(IDToken) {
-                    idToken = payload.idToken
-                    this.provider = Kakao
-                }
+                SocialProvider.Kakao -> error("Kakao uses OAuth. Do not call signInWithIdToken.")
+
             }
         }
         val session = supabase.auth.currentSessionOrNull() ?: error("No session after sign-in")
         session.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
-        _authState.value = AuthState.SignedIn(
+        /*_authState.value = AuthState.SignedIn(
             userId = session.user?.id.orEmpty(),
             email = session.user?.email
-        )
+        )*/
         logger.d("AuthRepository", "sign in success ${session.user?.id}")
     }.onFailure { exception ->
         logger.e("AuthRepository", "sign in failed", exception)
@@ -84,7 +101,7 @@ class AuthRepository @Inject constructor(
     suspend fun signOut(): Result<Int> = runCatching {
         supabase.auth.signOut()
         secure.clear(KEY_REFRESH)
-        _authState.value = AuthState.SignedOut
+        // _authState.value = AuthState.SignedOut
         logger.d("AuthRepository", "signOut success")
     }.onFailure { e ->
         logger.e("AuthRepository", "signOut failed", e)
