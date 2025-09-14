@@ -1,7 +1,9 @@
 package com.example.ruto.auth
 
+import android.app.Activity
 import android.content.Context
 import android.os.Build
+import com.example.ruto.domain.IdTokenPayload
 
 class GoogleAuthProvider(
     private val webClientId: String
@@ -15,18 +17,7 @@ class GoogleAuthProvider(
             LegacyGoogleSignInStrategy(webClientId)
         }
 
-    override fun isSignedIn(context: Context): Boolean {
-        return strategy.isSignedIn(context)
-    }
+    override suspend fun acquireIdToken(activity: Activity): IdTokenPayload =
+        strategy.acquireIdToken(activity)
 
-    override fun signIn(
-        context: Context,
-        onResult: (String?, Exception?) -> Unit
-    ) {
-        strategy.signIn(context, onResult)
-    }
-
-    override fun signOut(context: Context) {
-        strategy.signOut(context)
-    }
 }

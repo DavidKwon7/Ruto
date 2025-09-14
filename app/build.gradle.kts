@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
+
     kotlin("plugin.serialization") version "2.2.10"
 }
 
@@ -96,6 +99,17 @@ android {
     }
 }
 
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.squareup" && requested.name == "javapoet") {
+                useVersion("1.13.0")
+                because("Dagger/Hilt가 요구하는 ClassName.canonicalName() 보장")
+            }
+        }
+    }
+}
+
 kotlin {
     jvmToolchain(17)
 }
@@ -132,13 +146,15 @@ dependencies {
     implementation(libs.kakao.sdk.user)
 
     implementation("io.ktor:ktor-client-android:3.2.3")
-    /*implementation("androidx.navigation:navigation-compose:2.9.4")
 
-    implementation("com.google.dagger:hilt-android:2.52")
-    kapt("com.google.dagger:hilt-compiler:2.52")
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    // SplashScreen
+    implementation(libs.core.splashscreen)
 
-    // splash screen
-    implementation("androidx.core:core-splashscreen:1.0.1")*/
+    implementation("androidx.security:security-crypto:1.1.0")
+    implementation("androidx.security:security-crypto-ktx:1.1.0")
 }

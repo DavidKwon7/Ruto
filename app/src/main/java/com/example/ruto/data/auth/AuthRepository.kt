@@ -1,0 +1,92 @@
+package com.example.ruto.data.auth
+
+import androidx.compose.runtime.MutableState
+import com.example.ruto.data.security.SecureStore
+import com.example.ruto.domain.AuthState
+import com.example.ruto.domain.IdTokenPayload
+import com.example.ruto.domain.SocialProvider
+import com.example.ruto.util.AppLogger
+import com.example.ruto.util.withRetry
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.providers.Kakao
+import io.github.jan.supabase.auth.providers.builtin.IDToken
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class AuthRepository @Inject constructor(
+    private val supabase: SupabaseClient,
+    private val secure: SecureStore,
+    private val logger: AppLogger
+) {
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    val authState: StateFlow<AuthState> = _authState
+
+    private val KEY_REFRESH = "sb_refresh_token"
+
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching { supabase.auth.currentSessionOrNull() }
+                .onSuccess { session ->
+                    if (session != null) {
+                        _authState.value = AuthState.SignedIn(
+                            session.user?.id.orEmpty(),
+                            session.user?.email
+                        )
+                    } else {
+                        _authState.value = AuthState.SignedOut
+                    }
+                }
+                .onFailure { exception ->
+                    logger.e("AuthRepository", "restore session failed", exception)
+                    _authState.value = AuthState.SignedOut
+                }
+        }
+    }
+
+    suspend fun signInWithIdToken(
+        provider: SocialProvider,
+        payload: IdTokenPayload
+    ): Result<Int> = runCatching {
+        withRetry(maxAttempts = 3, initialDelayMs = 300) {
+            when (provider) {
+                SocialProvider.Google -> supabase.auth.signInWith(IDToken) {
+                    idToken = payload.idToken
+                    this.provider = Google
+                    payload.rawNonce?.let { nonce = it }
+                }
+
+                SocialProvider.Kakao -> supabase.auth.signInWith(IDToken) {
+                    idToken = payload.idToken
+                    this.provider = Kakao
+                }
+            }
+        }
+        val session = supabase.auth.currentSessionOrNull() ?: error("No session after sign-in")
+        session.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+        _authState.value = AuthState.SignedIn(
+            userId = session.user?.id.orEmpty(),
+            email = session.user?.email
+        )
+        logger.d("AuthRepository", "sign in success ${session.user?.id}")
+    }.onFailure { exception ->
+        logger.e("AuthRepository", "sign in failed", exception)
+        _authState.value = AuthState.Error(exception.message)
+    }
+
+    suspend fun signOut(): Result<Int> = runCatching {
+        supabase.auth.signOut()
+        secure.clear(KEY_REFRESH)
+        _authState.value = AuthState.SignedOut
+        logger.d("AuthRepository", "signOut success")
+    }.onFailure { e ->
+        logger.e("AuthRepository", "signOut failed", e)
+    }
+}

@@ -11,6 +11,6 @@ import com.example.ruto.screen.LoginScreen
 fun AppNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "login") {
         composable("login") { LoginScreen(navController) }
-        composable("home") { HomeScreen() }
+        composable("home") { HomeScreen(navController) }
     }
 }
