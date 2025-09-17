@@ -53,11 +53,11 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         vm.events.collect { if (it is UiEvent.ShowSnackbar) snackbar.showSnackbar(it.message) }
     }
-    LaunchedEffect(auth) {
+    /*LaunchedEffect(auth) {
         if (auth is AuthState.SignedIn) navController.navigate("home"){
             popUpTo("login") { inclusive = true }
         }
-    }
+    }*/
 
     val providers = remember { vm.availableProviders() }
 

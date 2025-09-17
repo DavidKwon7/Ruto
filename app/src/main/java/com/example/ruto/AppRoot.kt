@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,13 +27,27 @@ fun AppRoot(
     val auth by vm.authState.collectAsStateWithLifecycle()
     val boot by vm.bootstrapDone.collectAsStateWithLifecycle()
 
+    LaunchedEffect(boot, auth) {
+        if (!boot) return@LaunchedEffect
+        val target = when (auth) {
+            is AuthState.SignedOut -> "login"
+            is AuthState.SignedIn -> "home"
+            else -> return@LaunchedEffect
+        }
+        val current = nav.currentBackStackEntry?.destination?.route
+        if (current != target) nav.navigate(target) {
+            popUpTo(nav.graph.findStartDestination().id) { inclusive = false }
+            launchSingleTop = true
+        }
+    }
+
     NavHost(navController = nav, startDestination = "splash") {
         composable("splash") {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
 
-            LaunchedEffect(boot) {
+            /*LaunchedEffect(boot) {
                 if (boot) {
                     val dest = if (auth is AuthState.SignedIn) "home" else "login"
                     nav.navigate(dest) {
@@ -40,7 +55,7 @@ fun AppRoot(
                         launchSingleTop = true
                     }
                 }
-            }
+            }*/
         }
         composable("login") { LoginScreen(nav) }
         composable("home") { HomeScreen(nav) }
