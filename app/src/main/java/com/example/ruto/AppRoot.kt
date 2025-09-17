@@ -30,8 +30,8 @@ fun AppRoot(
     LaunchedEffect(boot, auth) {
         if (!boot) return@LaunchedEffect
         val target = when (auth) {
-            is AuthState.SignedOut -> "login"
-            is AuthState.SignedIn -> "home"
+            is AuthState.SignedIn, AuthState.Guest  -> "home"
+            is AuthState.SignedOut, is AuthState.Error -> "login"
             else -> return@LaunchedEffect
         }
         val current = nav.currentBackStackEntry?.destination?.route

@@ -5,6 +5,8 @@ sealed interface AuthState {
     data class SignedIn(val userId: String, val email: String?) : AuthState
     data object SignedOut : AuthState
     data class Error(val message: String?) : AuthState
+
+    data object Guest: AuthState
 }
 
 enum class SocialProvider { Google, Kakao }

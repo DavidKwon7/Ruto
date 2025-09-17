@@ -5,6 +5,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import com.example.ruto.BuildConfig
 import com.example.ruto.auth.AuthProvider
 import com.example.ruto.auth.GoogleAuthProvider
+import com.example.ruto.auth.GuestAuthProvider
 import com.example.ruto.auth.KakaoAuthProvider
 import com.example.ruto.data.security.EncryptedPrefsSecureStore
 import com.example.ruto.data.security.SecureStore
@@ -65,8 +66,9 @@ object AppModule {
     ): List<AuthProvider> =
         listOf(
             GoogleAuthProvider(BuildConfig.WEB_CLIENT_ID),
-            KakaoAuthProvider(supabase)
+            KakaoAuthProvider(supabase),
             // NaverAuthProvider(...) 추가 가능
+            GuestAuthProvider()
         )
 
 }

@@ -1,6 +1,5 @@
 package com.example.ruto.data.auth
 
-import androidx.compose.runtime.MutableState
 import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.AuthState
 import com.example.ruto.domain.IdTokenPayload
@@ -10,7 +9,6 @@ import com.example.ruto.util.withRetry
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
-import io.github.jan.supabase.auth.providers.Kakao
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +32,7 @@ class AuthRepository @Inject constructor(
     val bootstrapDone: StateFlow<Boolean> = _bootstrapDone
 
     private val KEY_REFRESH = "sb_refresh_token"
+    private val KEY_GUEST = "guest_mode"
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -41,22 +40,29 @@ class AuthRepository @Inject constructor(
                 .onSuccess { cur ->
                     if (cur != null) {
                         cur.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+                        secure.clear(KEY_GUEST)
                         _authState.value = AuthState.SignedIn(
                             userId = cur.user?.id.orEmpty(),
                             email = cur.user?.email
                         )
                     } else {
-                        val saved = secure.getString(KEY_REFRESH)
-                        if (!saved.isNullOrBlank()) {
-                            attemptRestoreWithRefresh(saved)
+                        val savedRefresh = secure.getString(KEY_REFRESH)
+                        if (!savedRefresh.isNullOrBlank()) {
+                            attemptRestoreWithRefresh(savedRefresh)
                         } else {
-                            _authState.value = AuthState.SignedOut
+                            val guest = secure.getString(KEY_GUEST) == "1"
+                            if (guest) {
+                                _authState.value = AuthState.Guest
+                            } else {
+                                _authState.value = AuthState.SignedOut
+                            }
                         }
                     }
                 }
                 .onFailure {
                     logger.e("AuthRepository", "restore session failed", it)
-                    _authState.value = AuthState.SignedOut
+                    val guest = secure.getString(KEY_GUEST) == "1"
+                    _authState.value = if (guest) AuthState.Guest else AuthState.SignedOut
                 }
 
             _bootstrapDone.value = true
@@ -64,10 +70,14 @@ class AuthRepository @Inject constructor(
             supabase.auth.sessionStatus.collect { status ->
                 when (status) {
                     SessionStatus.Initializing -> Unit
-                    is SessionStatus.NotAuthenticated -> _authState.value = AuthState.SignedOut
+                    is SessionStatus.NotAuthenticated -> {
+                        val guest = secure.getString(KEY_GUEST) == "1"
+                        _authState.value = if (guest) AuthState.Guest else AuthState.SignedOut
+                    }
                     is SessionStatus.Authenticated -> {
                         val s = status.session
                         s.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+                        secure.clear(KEY_GUEST)
                         _authState.value = AuthState.SignedIn(
                             userId = s.user?.id.orEmpty(),
                             email = s.user?.email
@@ -77,7 +87,8 @@ class AuthRepository @Inject constructor(
 
                     is SessionStatus.RefreshFailure -> {
                         secure.clear(KEY_REFRESH)
-                        _authState.value = AuthState.SignedOut
+                        val guest = secure.getString(KEY_GUEST) == "1"
+                        _authState.value = if (guest) AuthState.Guest else AuthState.SignedOut
                     }
                 }
             }
@@ -89,6 +100,7 @@ class AuthRepository @Inject constructor(
         runCatching { supabase.auth.refreshSession(refresh) }
             .onSuccess { s ->
                 s.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+                secure.clear(KEY_GUEST)
                 _authState.value = AuthState.SignedIn(
                     userId = s.user?.id.orEmpty(),
                     email = s.user?.email
@@ -97,7 +109,8 @@ class AuthRepository @Inject constructor(
             .onFailure {
                 logger.e("AuthRepository", "restore via refresh failed", it)
                 secure.clear(KEY_REFRESH)
-                _authState.value = AuthState.SignedOut
+                val guest = secure.getString(KEY_GUEST) == "1"
+                _authState.value = if (guest) AuthState.Guest else AuthState.SignedOut
             }
     }
 
@@ -123,16 +136,38 @@ class AuthRepository @Inject constructor(
             userId = session.user?.id.orEmpty(),
             email = session.user?.email
         )*/
+        secure.clear(KEY_GUEST)
         logger.d("AuthRepository", "sign in success ${session.user?.id}")
     }.onFailure { exception ->
         logger.e("AuthRepository", "sign in failed", exception)
         _authState.value = AuthState.Error(exception.message)
     }
 
-    suspend fun signOut(): Result<Int> = runCatching {
+    /**
+     * 게스트 로그인
+     */
+    suspend fun signInAsGuest(): Result<Int> = runCatching {
+        secure.putString(KEY_GUEST, "1")
+        secure.clear(KEY_REFRESH)
+        _authState.value = AuthState.Guest
+        logger.d("AuthRepository", "signInAsGuest success")
+    }
+
+    /*suspend fun signOut(): Result<Int> = runCatching {
         supabase.auth.signOut()
         secure.clear(KEY_REFRESH)
+        secure.clear(KEY_GUEST)
         // _authState.value = AuthState.SignedOut
+        logger.d("AuthRepository", "signOut success")
+    }.onFailure { e ->
+        logger.e("AuthRepository", "signOut failed", e)
+    }*/
+
+    suspend fun signOut(): Result<Int> = runCatching {
+        runCatching { supabase.auth.signOut() }
+        secure.clear(KEY_REFRESH)
+        secure.clear(KEY_GUEST)
+        _authState.value = AuthState.SignedOut
         logger.d("AuthRepository", "signOut success")
     }.onFailure { e ->
         logger.e("AuthRepository", "signOut failed", e)

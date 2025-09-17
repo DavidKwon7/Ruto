@@ -11,7 +11,6 @@ import com.example.ruto.ui.event.UiEvent
 import com.example.ruto.ui.state.UiState
 import com.example.ruto.util.AppLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,22 +44,24 @@ class AuthViewModel @Inject constructor(
                         val payload = provider.acquireIdToken(activity)
                         repo.signInWithIdToken(SocialProvider.Google, payload)
                             .onFailure {
-                                val msg = it.message ?: "Sign-in failed"
-                                _uiState.update { s -> s.copy(error = msg) }
-                                _events.emit(UiEvent.ShowSnackbar(msg))
+                                showMessage(it.message ?: "Sign-in failed")
                             }
                     }
                     "Kakao" -> {
                         // 브라우저 OAuth 시작 (세션 반영은 딥링크 콜백 후 자동)
                         provider.startOAuth(activity)
                     }
+                    "Guest" -> {
+                        repo.signInAsGuest()
+                            .onFailure {
+                                showMessage(it.message ?: "Guest sign-in failed")
+                            }
+                    }
                     else -> error("Unsupported provider: ${provider.name}")
                 }
             } catch (e: Exception) {
                 logger.e("AuthVM", "signIn(${provider.name}) fail", e)
-                val msg = e.message ?: "Sign-in error"
-                _uiState.update { it.copy(error = msg) }
-                _events.emit(UiEvent.ShowSnackbar(msg))
+                showMessage(e.message ?: "Sign-in error")
             } finally {
                 _uiState.update { it.copy(loading = false) }
             }
@@ -73,11 +74,14 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(loading = true, error = null) }
             repo.signOut()
                 .onFailure {
-                    val msg = it.message ?: "Sign-out failed"
-                    _uiState.update { u -> u.copy(error = msg) }
-                    _events.emit(UiEvent.ShowSnackbar(msg))
+                    showMessage(it.message ?: "Sign-out failed")
                 }
             _uiState.update { it.copy(loading = false) }
         }
+    }
+
+    private suspend fun showMessage(msg: String) {
+        _uiState.update { it.copy(error = msg) }
+        _events.emit(UiEvent.ShowSnackbar(msg))
     }
 }
