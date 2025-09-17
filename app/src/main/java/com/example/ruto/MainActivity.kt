@@ -69,8 +69,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             RutoTheme {
-                val navController = rememberNavController()
-                AppNavHost(navController)
+                AppRoot()
+                // val navController = rememberNavController()
+                // AppNavHost(navController)
             }
         }
     }

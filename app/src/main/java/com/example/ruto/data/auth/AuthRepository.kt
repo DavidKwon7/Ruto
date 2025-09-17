@@ -30,13 +30,40 @@ class AuthRepository @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState
 
+    private val _bootstrapDone = MutableStateFlow(false)
+    val bootstrapDone: StateFlow<Boolean> = _bootstrapDone
+
     private val KEY_REFRESH = "sb_refresh_token"
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
+            runCatching { supabase.auth.currentSessionOrNull() }
+                .onSuccess { cur ->
+                    if (cur != null) {
+                        cur.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+                        _authState.value = AuthState.SignedIn(
+                            userId = cur.user?.id.orEmpty(),
+                            email = cur.user?.email
+                        )
+                    } else {
+                        val saved = secure.getString(KEY_REFRESH)
+                        if (!saved.isNullOrBlank()) {
+                            attemptRestoreWithRefresh(saved)
+                        } else {
+                            _authState.value = AuthState.SignedOut
+                        }
+                    }
+                }
+                .onFailure {
+                    logger.e("AuthRepository", "restore session failed", it)
+                    _authState.value = AuthState.SignedOut
+                }
+
+            _bootstrapDone.value = true
+
             supabase.auth.sessionStatus.collect { status ->
-                when(status) {
-                    SessionStatus.Initializing -> _authState.value = AuthState.Loading
+                when (status) {
+                    SessionStatus.Initializing -> Unit
                     is SessionStatus.NotAuthenticated -> _authState.value = AuthState.SignedOut
                     is SessionStatus.Authenticated -> {
                         val s = status.session
@@ -47,27 +74,31 @@ class AuthRepository @Inject constructor(
                         )
                         logger.d("AuthRepository", "session authenticated: ${s.user?.id}")
                     }
+
                     is SessionStatus.RefreshFailure -> {
+                        secure.clear(KEY_REFRESH)
                         _authState.value = AuthState.SignedOut
                     }
                 }
             }
-            /*runCatching { supabase.auth.currentSessionOrNull() }
-                .onSuccess { session ->
-                    if (session != null) {
-                        _authState.value = AuthState.SignedIn(
-                            session.user?.id.orEmpty(),
-                            session.user?.email
-                        )
-                    } else {
-                        _authState.value = AuthState.SignedOut
-                    }
-                }
-                .onFailure { exception ->
-                    logger.e("AuthRepository", "restore session failed", exception)
-                    _authState.value = AuthState.SignedOut
-                }*/
         }
+    }
+
+    private suspend fun attemptRestoreWithRefresh(refresh: String) {
+        _authState.value = AuthState.Loading
+        runCatching { supabase.auth.refreshSession(refresh) }
+            .onSuccess { s ->
+                s.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
+                _authState.value = AuthState.SignedIn(
+                    userId = s.user?.id.orEmpty(),
+                    email = s.user?.email
+                )
+            }
+            .onFailure {
+                logger.e("AuthRepository", "restore via refresh failed", it)
+                secure.clear(KEY_REFRESH)
+                _authState.value = AuthState.SignedOut
+            }
     }
 
     suspend fun signInWithIdToken(

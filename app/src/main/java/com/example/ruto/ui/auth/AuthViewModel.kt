@@ -26,6 +26,7 @@ class AuthViewModel @Inject constructor(
     private val logger: AppLogger
 ) : ViewModel() {
     val authState: StateFlow<AuthState> = repo.authState
+    val bootstrapDone: StateFlow<Boolean> = repo.bootstrapDone
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
