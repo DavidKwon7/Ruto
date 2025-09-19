@@ -1,8 +1,6 @@
 package com.example.ruto.screen
 
 import android.app.Activity
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,8 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.ruto.auth.AuthProviderFactory
-import com.example.ruto.domain.AuthState
 import com.example.ruto.ui.auth.AuthViewModel
 import com.example.ruto.ui.event.UiEvent
 

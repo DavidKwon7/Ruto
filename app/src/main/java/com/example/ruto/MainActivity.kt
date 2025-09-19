@@ -60,7 +60,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // KakaoSdk.init(this, BuildConfig.KAKAO_NATIVE_APP_KEY)
         supabase.handleDeeplinks(intent)
 
         splash.setKeepOnScreenCondition {
@@ -70,8 +69,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             RutoTheme {
                 AppRoot()
-                // val navController = rememberNavController()
-                // AppNavHost(navController)
             }
         }
     }
@@ -80,56 +77,5 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         supabase.handleDeeplinks(intent)
-    }
-}
-
-@Composable
-fun GoogleSignInButton() {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
-    val onClick: () -> Unit = {
-        val credentialManager = CredentialManager.create(context)
-        val rawNonce = UUID.randomUUID().toString()
-        val bytes = rawNonce.toByteArray()
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(bytes)
-        val hashedNonce = digest.fold("") { str, it -> str + "%02x".format(it) }
-
-        Log.i("상수 확인", AppConstants.WEB_CLIENT_ID)
-
-        val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            //.setServerClientId("602387918082-rfct3i0kpncv8p3jr5nsjchp16u9ac7v.apps.googleusercontent.com")
-            .setServerClientId(AppConstants.WEB_CLIENT_ID)
-            .setNonce(hashedNonce)
-            .build()
-
-        val request: GetCredentialRequest = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-
-        coroutineScope.launch {
-            try {
-                val result = credentialManager.getCredential(
-                    request = request,
-                    context = context
-                )
-                val credential = result.credential
-                val googleIdTokenCredential = GoogleIdTokenCredential
-                    .createFrom(credential.data)
-                val googleIdToken = googleIdTokenCredential.idToken
-                Log.i("GoogleIdToken", googleIdToken)
-                Toast.makeText(context, "You are signed in!", Toast.LENGTH_SHORT).show()
-            } catch (e: GetCredentialException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            } catch (e: GoogleIdTokenParsingException) {
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    Button(onClick = onClick) {
-        Text(text = "Sign in with Google")
     }
 }

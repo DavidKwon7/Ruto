@@ -132,10 +132,6 @@ class AuthRepository @Inject constructor(
         }
         val session = supabase.auth.currentSessionOrNull() ?: error("No session after sign-in")
         session.refreshToken?.let { secure.putString(KEY_REFRESH, it) }
-        /*_authState.value = AuthState.SignedIn(
-            userId = session.user?.id.orEmpty(),
-            email = session.user?.email
-        )*/
         secure.clear(KEY_GUEST)
         logger.d("AuthRepository", "sign in success ${session.user?.id}")
     }.onFailure { exception ->
@@ -152,16 +148,6 @@ class AuthRepository @Inject constructor(
         _authState.value = AuthState.Guest
         logger.d("AuthRepository", "signInAsGuest success")
     }
-
-    /*suspend fun signOut(): Result<Int> = runCatching {
-        supabase.auth.signOut()
-        secure.clear(KEY_REFRESH)
-        secure.clear(KEY_GUEST)
-        // _authState.value = AuthState.SignedOut
-        logger.d("AuthRepository", "signOut success")
-    }.onFailure { e ->
-        logger.e("AuthRepository", "signOut failed", e)
-    }*/
 
     suspend fun signOut(): Result<Int> = runCatching {
         runCatching { supabase.auth.signOut() }

@@ -46,16 +46,6 @@ fun AppRoot(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-
-            /*LaunchedEffect(boot) {
-                if (boot) {
-                    val dest = if (auth is AuthState.SignedIn) "home" else "login"
-                    nav.navigate(dest) {
-                        popUpTo("splash") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            }*/
         }
         composable("login") { LoginScreen(nav) }
         composable("home") { HomeScreen(nav) }

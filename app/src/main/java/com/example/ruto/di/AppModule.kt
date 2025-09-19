@@ -1,7 +1,6 @@
 package com.example.ruto.di
 
 import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
 import com.example.ruto.BuildConfig
 import com.example.ruto.auth.AuthProvider
 import com.example.ruto.auth.GoogleAuthProvider
