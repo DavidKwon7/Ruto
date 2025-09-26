@@ -29,6 +29,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.navigation.compose.rememberNavController
+import com.example.ruto.data.fcm.RoutinePushHandler
 import com.example.ruto.domain.AuthState
 import com.example.ruto.ui.auth.AuthViewModel
 import com.example.ruto.ui.theme.RutoTheme
@@ -52,6 +53,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var supabase: SupabaseClient
+    @Inject lateinit var pushHandler: RoutinePushHandler
     private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +63,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         supabase.handleDeeplinks(intent)
+        pushHandler.trySyncPendingToken()   // 앱 시작 시, 미반영 토큰 재동기화
 
         splash.setKeepOnScreenCondition {
             authViewModel.authState.value is AuthState.Loading

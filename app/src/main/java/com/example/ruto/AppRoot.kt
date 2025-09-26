@@ -18,6 +18,7 @@ import com.example.ruto.domain.AuthState
 import com.example.ruto.screen.HomeScreen
 import com.example.ruto.screen.LoginScreen
 import com.example.ruto.ui.auth.AuthViewModel
+import com.example.ruto.ui.routine.RoutineCreateScreen
 
 @Composable
 fun AppRoot(
@@ -49,5 +50,6 @@ fun AppRoot(
         }
         composable("login") { LoginScreen(nav) }
         composable("home") { HomeScreen(nav) }
+        composable("routineCreate") {RoutineCreateScreen(nav)}
     }
 }

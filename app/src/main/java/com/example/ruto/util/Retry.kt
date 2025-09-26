@@ -5,7 +5,7 @@ import kotlinx.coroutines.delay
 suspend inline fun <T> withRetry(
     maxAttempts:Int = 3,
     initialDelayMs:Long = 400,
-    facotr: Double = 2.0,
+    factor: Double = 2.0,
     noinline shouldRetry: (Throwable) -> Boolean = {true},
     crossinline block: suspend () -> T
 ) : T {
@@ -20,7 +20,7 @@ suspend inline fun <T> withRetry(
             last = t
             if (!shouldRetry(t) || attempt == maxAttempts -1) break
             delay(delayMs)
-            delayMs = (delayMs * facotr).toLong()
+            delayMs = (delayMs * factor).toLong()
             attempt++
         }
     }

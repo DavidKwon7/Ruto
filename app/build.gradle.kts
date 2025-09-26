@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
 
     kotlin("plugin.serialization") version "2.2.10"
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -70,6 +71,7 @@ android {
             buildConfigField("String", "SUPABASE_URL", "\"${localProperties.getProperty("SUPABASE_URL")}\"")
             buildConfigField("String", "SUPABASE_KEY", "\"${localProperties.getProperty("SUPABASE_KEY")}\"")
             buildConfigField("String", "WEB_CLIENT_ID", "\"${localProperties.getProperty("WEB_CLIENT_ID")}\"")
+            buildConfigField("String", "KAKAO_NATIVE_APP_KEY", "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY")}\"")
 
             buildConfigField("boolean", "IS_DEBUG", "false")
         }
@@ -124,6 +126,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -145,7 +148,13 @@ dependencies {
 
     implementation(libs.kakao.sdk.user)
 
+    // ktor
     implementation("io.ktor:ktor-client-android:3.2.3")
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+
+    implementation(libs.kotlinx.serialization.json)
 
     // Hilt
     implementation(libs.hilt.android)
