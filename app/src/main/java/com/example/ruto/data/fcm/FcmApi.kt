@@ -1,6 +1,9 @@
 package com.example.ruto.data.fcm
 
+import com.example.ruto.BuildConfig
+import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.fcm.RegisterFcmModels
+import com.example.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.ktor.client.HttpClient
@@ -13,7 +16,8 @@ import javax.inject.Inject
 
 class FcmApi @Inject constructor(
     private val client: HttpClient,
-    private val supabase: SupabaseClient
+    private val supabase: SupabaseClient,
+    private val secure: SecureStore
 ) {
     private val functionsBase = "https://wyqbynrmzndxuiahhdxg.functions.supabase.co"
 
@@ -23,7 +27,7 @@ class FcmApi @Inject constructor(
      * - X-Guest-Id: <uuid> (게스트면)
      * - apikey: <ANON_KEY> (항상)
      */
-    suspend fun registerFcmToken(
+    /*suspend fun registerFcmToken(
         req: RegisterFcmModels.RegisterFcmRequest,
         anonKey: String,
         guestId: String?
@@ -34,6 +38,23 @@ class FcmApi @Inject constructor(
             header("apikey", anonKey)
             accessToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
             guestId?.let { header("X-Guest-Id", it) }
+        }.body()
+    }*/
+
+    /**
+     * Edge Function: /register-fcm
+     * - Authorization: Bearer <access_token> (로그인)  또는
+     * - X-Guest-Id: <uuid> (게스트)
+     * - apikey: <ANON_KEY> (항상)
+     */
+    suspend fun registerFcmToken(
+        req: RegisterFcmModels.RegisterFcmRequest,
+        anonKey: String = BuildConfig.SUPABASE_KEY
+    ): RegisterFcmModels.RegisterFcmResponse {
+        return client.post("$functionsBase/register-fcm") {
+            header("apikey", anonKey)
+            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
+            setBody(req)
         }.body()
     }
 }

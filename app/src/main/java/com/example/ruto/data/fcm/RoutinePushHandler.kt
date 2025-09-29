@@ -20,8 +20,8 @@ import javax.inject.Singleton
 
 /**
  * FCM 토큰을 안전 저장하고, 서버(Edge Function)로 동기화해 주는 핸들러.
- * - 게스트: X-Guest-Id 헤더를 사용
- * - 로그인 사용자: Authorization 헤더 사용
+ * - 로그인: Authorization 헤더 사용 (FcmApi 내부 applyAuthHeaders)
+ * - 게스트: X-Guest-Id 헤더 사용 (FcmApi 내부 applyAuthHeaders)
  */
 @Singleton
 class RoutinePushHandler @Inject constructor(
@@ -49,8 +49,8 @@ class RoutinePushHandler @Inject constructor(
     }
 
     /**
-     * 앱 부팅 시 불릴 수 있는 보조 함수(선택).
-     * - pending 이 있으면 서버 반영 시도
+     * 앱 부팅 시 불러 pending 토큰이 있으면 서버 반영 시도.
+     * (Splash 완료 직후, 또는 App 초기화 시점에서 한 번 호출 권장)
      */
     fun trySyncPendingToken() {
         val pending = secure.getString(KEY_FCM_TOKEN_PENDING)
@@ -61,9 +61,6 @@ class RoutinePushHandler @Inject constructor(
     }
 
     private suspend fun syncToServer(token: String) {
-        val isLoggedIn = supabase.auth.currentSessionOrNull() != null
-        val guestId = if (isLoggedIn) null else ensureGuestId()
-
         val appVersion = readAppVersionOrNull()
 
         val req = RegisterFcmModels.RegisterFcmRequest(
@@ -80,11 +77,8 @@ class RoutinePushHandler @Inject constructor(
         while (attempt < maxAttempts) {
             attempt++
             try {
-                api.registerFcmToken(
-                    req = req,
-                    anonKey = anonKey,
-                    guestId = guestId
-                )
+                // 헤더(Authorization or X-Guest-Id)는 FcmApi 내부에서 자동 적용
+                api.registerFcmToken(req = req,)
                 // 성공: 확정 저장, pending 제거
                 secure.putString(KEY_FCM_TOKEN, token)
                 secure.clear(KEY_FCM_TOKEN_PENDING)
@@ -100,16 +94,9 @@ class RoutinePushHandler @Inject constructor(
         logger.e("PushHandler", "FCM token sync permanently failed", null)
     }
 
-    private fun ensureGuestId(): String {
-        var id = secure.getString(KEY_GUEST_ID)
-        if (id.isNullOrBlank()) {
-            id = UUID.randomUUID().toString()
-            secure.putString(KEY_GUEST_ID, id)
-        }
-        return id
-    }
-
-    /** 앱 버전을 안전하게 읽어 문자열로 반환 (SDK 버전에 따라 처리) */
+    /**
+     * 앱 버전을 안전하게 읽어 문자열로 반환 (SDK 버전에 따라 처리)
+     */
     private fun readAppVersionOrNull(): String? = try {
         val pm = appContext.packageManager
         val pkg = appContext.packageName

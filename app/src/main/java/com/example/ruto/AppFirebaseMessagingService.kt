@@ -22,8 +22,7 @@ class AppFirebaseMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
 
         logger.d("FCM", "new token: $token")
-        // 서버에 토큰 동기화(로그인 사용자거나 게스트 식별자와 함께)
-        // routinePushHandler.onNewFcmToken(token)
+        // 서버 동기화(로그인/게스트 여부는 FcmApi 내부 applyAuthHeaders가 자동 판단)
         routinePushHandler.onNewToken(token)
     }
 

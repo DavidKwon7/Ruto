@@ -74,6 +74,7 @@ class RoutineRepository @Inject constructor(
         val guestId = supabase.auth.currentSessionOrNull()?.let { null } ?: ensureGuestId()
 
         // 4) 전송
-        api.createRoutine(req, guestId)
+        //api.createRoutine(req, guestId)
+        api.createRoutine(req)
     }
 }

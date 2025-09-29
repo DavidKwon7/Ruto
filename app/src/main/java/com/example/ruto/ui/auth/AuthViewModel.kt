@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ruto.auth.AuthProvider
 import com.example.ruto.data.auth.AuthRepository
+import com.example.ruto.data.fcm.FcmApi
+import com.example.ruto.data.fcm.reRegisterFcm
 import com.example.ruto.domain.AuthState
 import com.example.ruto.domain.SocialProvider
 import com.example.ruto.ui.event.UiEvent
@@ -22,7 +24,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val repo: AuthRepository,
     private val providers: List<@JvmSuppressWildcards AuthProvider>,
-    private val logger: AppLogger
+    private val logger: AppLogger,
+    private val fcmApi: FcmApi,
 ) : ViewModel() {
     val authState: StateFlow<AuthState> = repo.authState
     val bootstrapDone: StateFlow<Boolean> = repo.bootstrapDone
@@ -32,6 +35,12 @@ class AuthViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<UiEvent>()
     val events: MutableSharedFlow<UiEvent> = _events
+
+    init {
+        viewModelScope.launch {
+            runCatching { reRegisterFcm(fcmApi) }
+        }
+    }
 
     fun availableProviders(): List<AuthProvider> = providers
 
@@ -43,8 +52,14 @@ class AuthViewModel @Inject constructor(
                     "Google" -> {
                         val payload = provider.acquireIdToken(activity)
                         repo.signInWithIdToken(SocialProvider.Google, payload)
-                            .onFailure {
-                                showMessage(it.message ?: "Sign-in failed")
+                            .onFailure { err ->
+                                val msg = err.message ?: "Sign-in failed"
+                                _uiState.update { s -> s.copy(error = msg) }
+                                _events.emit(UiEvent.ShowSnackbar(msg))
+                            }
+                            .onSuccess {
+                                // 로그인 성공 직후 FCM 토큰 재등록
+                                runCatching { reRegisterFcm(fcmApi) }
                             }
                     }
                     "Kakao" -> {
@@ -61,7 +76,9 @@ class AuthViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 logger.e("AuthVM", "signIn(${provider.name}) fail", e)
-                showMessage(e.message ?: "Sign-in error")
+                val msg = e.message ?: "Sign-in error"
+                _uiState.update { it.copy(error = msg) }
+                _events.emit(UiEvent.ShowSnackbar(msg))
             } finally {
                 _uiState.update { it.copy(loading = false) }
             }
