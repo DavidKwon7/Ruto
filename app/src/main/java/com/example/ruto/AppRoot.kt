@@ -18,6 +18,7 @@ import com.example.ruto.domain.AuthState
 import com.example.ruto.screen.HomeScreen
 import com.example.ruto.screen.LoginScreen
 import com.example.ruto.ui.auth.AuthViewModel
+import com.example.ruto.ui.permission.EnsureNotificationPermission
 import com.example.ruto.ui.routine.RoutineCreateScreen
 
 @Composable
@@ -27,6 +28,8 @@ fun AppRoot(
     val nav = rememberNavController()
     val auth by vm.authState.collectAsStateWithLifecycle()
     val boot by vm.bootstrapDone.collectAsStateWithLifecycle()
+
+    EnsureNotificationPermission()
 
     LaunchedEffect(boot, auth) {
         if (!boot) return@LaunchedEffect
