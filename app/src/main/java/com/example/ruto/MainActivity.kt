@@ -63,7 +63,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         supabase.handleDeeplinks(intent)
-        pushHandler.trySyncPendingToken()   // 앱 시작 시, 미반영 토큰 재동기화
 
         splash.setKeepOnScreenCondition {
             authViewModel.authState.value is AuthState.Loading

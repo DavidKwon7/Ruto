@@ -5,13 +5,13 @@ import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.fcm.RegisterFcmModels
 import com.example.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.HttpHeaders
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import javax.inject.Inject
 
 class FcmApi @Inject constructor(
@@ -19,27 +19,8 @@ class FcmApi @Inject constructor(
     private val supabase: SupabaseClient,
     private val secure: SecureStore
 ) {
+    private val base = BuildConfig.SUPABASE_URL
     private val functionsBase = "https://wyqbynrmzndxuiahhdxg.functions.supabase.co"
-
-    /**
-     * Edge Function: /register-fcm
-     * - Authorization: Bearer <access_token> (로그인 사용자면)
-     * - X-Guest-Id: <uuid> (게스트면)
-     * - apikey: <ANON_KEY> (항상)
-     */
-    /*suspend fun registerFcmToken(
-        req: RegisterFcmModels.RegisterFcmRequest,
-        anonKey: String,
-        guestId: String?
-    ): RegisterFcmModels.RegisterFcmResponse {
-        val accessToken = supabase.auth.currentSessionOrNull()?.accessToken
-        return client.post("$functionsBase/register-fcm") {
-            setBody(req)
-            header("apikey", anonKey)
-            accessToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
-            guestId?.let { header("X-Guest-Id", it) }
-        }.body()
-    }*/
 
     /**
      * Edge Function: /register-fcm
@@ -51,10 +32,15 @@ class FcmApi @Inject constructor(
         req: RegisterFcmModels.RegisterFcmRequest,
         anonKey: String = BuildConfig.SUPABASE_KEY
     ): RegisterFcmModels.RegisterFcmResponse {
-        return client.post("$functionsBase/register-fcm") {
+        // return client.post("$functionsBase/register-fcm") {
+        val resp =  client.post("$base/functions/v1/register-fcm") {
             header("apikey", anonKey)
-            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
+            applyAuthHeaders(supabase, secure)   // 공통 규칙 적용
             setBody(req)
-        }.body()
+        }
+        if (!resp.status.isSuccess()) {
+            throw IllegalStateException("register-fcm failed: ${resp.status} ${resp.bodyAsText()}")
+        }
+        return resp.body()
     }
 }

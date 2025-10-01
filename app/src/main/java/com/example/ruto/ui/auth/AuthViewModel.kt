@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ruto.auth.AuthProvider
 import com.example.ruto.data.auth.AuthRepository
 import com.example.ruto.data.fcm.FcmApi
+import com.example.ruto.data.fcm.RoutinePushHandler
 import com.example.ruto.data.fcm.reRegisterFcm
 import com.example.ruto.domain.AuthState
 import com.example.ruto.domain.SocialProvider
@@ -16,6 +17,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,7 +28,8 @@ class AuthViewModel @Inject constructor(
     private val repo: AuthRepository,
     private val providers: List<@JvmSuppressWildcards AuthProvider>,
     private val logger: AppLogger,
-    private val fcmApi: FcmApi,
+    private val pushHandler: RoutinePushHandler,
+    //private val fcmApi: FcmApi,
 ) : ViewModel() {
     val authState: StateFlow<AuthState> = repo.authState
     val bootstrapDone: StateFlow<Boolean> = repo.bootstrapDone
@@ -38,7 +42,13 @@ class AuthViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            runCatching { reRegisterFcm(fcmApi) }
+            // runCatching { reRegisterFcm(fcmApi) }
+            bootstrapDone.filter { it }
+                .take(1)    // 최초 1회
+                .collect {
+                    pushHandler.trySyncPendingToken()
+                    pushHandler.onLoginOrBootstrap()
+                }
         }
     }
 
@@ -59,18 +69,25 @@ class AuthViewModel @Inject constructor(
                             }
                             .onSuccess {
                                 // 로그인 성공 직후 FCM 토큰 재등록
-                                runCatching { reRegisterFcm(fcmApi) }
+                                // runCatching { reRegisterFcm(fcmApi) }
+
+                                // 로그인 성공 직후: 유저 자격으로 FCM 재등록(게스트 토큰 승격)
+                                viewModelScope.launch { pushHandler.onLoginOrBootstrap() }
                             }
                     }
                     "Kakao" -> {
                         // 브라우저 OAuth 시작 (세션 반영은 딥링크 콜백 후 자동)
                         provider.startOAuth(activity)
+                        // Kakao는 콜백 후 세션이 생성되면 App 쪽에서
+                        // bootstrapDone 또는 로그인 성공 신호에 맞춰 onLoginOrBootstrap() 호출됨
                     }
                     "Guest" -> {
                         repo.signInAsGuest()
                             .onFailure {
                                 showMessage(it.message ?: "Guest sign-in failed")
                             }
+                        // 게스트 모드일 때는 pushHandler.onLoginOrBootstrap()가 게스트 헤더(X-Guest-Id)로 등록 처리
+                        viewModelScope.launch { pushHandler.onLoginOrBootstrap() }
                     }
                     else -> error("Unsupported provider: ${provider.name}")
                 }
@@ -93,6 +110,7 @@ class AuthViewModel @Inject constructor(
                 .onFailure {
                     showMessage(it.message ?: "Sign-out failed")
                 }
+            pushHandler.onLogout()
             _uiState.update { it.copy(loading = false) }
         }
     }

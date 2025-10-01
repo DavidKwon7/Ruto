@@ -1,11 +1,14 @@
 package com.example.ruto.data.fcm
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
+import android.provider.Settings
 import com.example.ruto.BuildConfig
 import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.fcm.RegisterFcmModels
 import com.example.ruto.util.AppLogger
+import com.google.firebase.installations.FirebaseInstallations
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -13,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
@@ -31,14 +35,49 @@ class RoutinePushHandler @Inject constructor(
     private val logger: AppLogger,
     @ApplicationContext private val appContext: Context
 ) {
-    private val KEY_GUEST_ID = "guest_id"
     private val KEY_FCM_TOKEN = "fcm_token"                 // 마지막 업로드 성공 토큰
     private val KEY_FCM_TOKEN_PENDING = "fcm_token_pending" // 아직 서버 반영 전 토큰(앱 재시작 복구용)
 
-    private val anonKey: String = BuildConfig.SUPABASE_KEY  // SUPABASE_ANON_KEY
-
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    /**
+     * Android_ID (device_id)
+     */
+    @SuppressLint("HardwareIds")
+    private fun readAndroidId(): String? = try {
+        Settings.Secure.getString(appContext.contentResolver, Settings.Secure.ANDROID_ID)
+    } catch (e: Exception) { null }
+
+    /**
+     * Firebase Installations ID (installation_id)
+     */
+    private suspend fun readInstallationsId(): String? = try {
+        suspendCancellableCoroutine { continuation ->
+            FirebaseInstallations.getInstance().id
+                .addOnSuccessListener { continuation.resume(it, onCancellation = null) }
+                .addOnFailureListener { continuation.resume(null, onCancellation = null) }
+        }
+    }catch (e: Exception) { null }
+
+    /**
+     * 앱 버전을 안전하게 읽어 문자열로 반환 (SDK 버전에 따라 처리)
+     */
+    private fun readAppVersionOrNull(): String? = try {
+        val pm = appContext.packageManager
+        val pkg = appContext.packageName
+        val pInfo = pm.getPackageInfo(pkg, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            pInfo.longVersionCode.toString()
+        } else {
+            pInfo.versionName
+        }
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * FCM SDK로부터 새 토큰을 받았을 때 호출
+     */
     fun onNewToken(token: String) {
         logger.d("FCM", "onNewToken: $token")
 
@@ -95,18 +134,43 @@ class RoutinePushHandler @Inject constructor(
     }
 
     /**
-     * 앱 버전을 안전하게 읽어 문자열로 반환 (SDK 버전에 따라 처리)
+     * 로그인 완료 혹은 부팅 시(세션 복구 직후)에 호출.
+     * - 현재 보유 토큰이 있으면 Authorization 헤더로 재등록(게스트→유저 승격)
+     * - 토큰이 없으면 FCM SDK가 곧 콜백(onNewToken)해줄 때까지 대기
      */
-    private fun readAppVersionOrNull(): String? = try {
-        val pm = appContext.packageManager
-        val pkg = appContext.packageName
-        val pInfo = pm.getPackageInfo(pkg, 0)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            pInfo.longVersionCode.toString()
-        } else {
-            pInfo.versionName
+    suspend fun onLoginOrBootstrap() {
+        val token = secure.getString(KEY_FCM_TOKEN) ?: secure.getString(KEY_FCM_TOKEN_PENDING)
+        if (token.isNullOrBlank()) {
+            logger.d("PushHandler", "onLoginOrBootstrap: no token yet, wait for FCM callback")
+            return
         }
-    } catch (e: Exception) {
-        null
+        syncToServer(token)
+    }
+
+    /**
+     * 로그아웃 시 호출.
+     * - 보수적으로는 /unregister-fcm 를 만들어 삭제하는 게 최선이지만,
+     * - 간단한 접근: 같은 토큰을 게스트 헤더로 다시 register-fcm 호출 → user_id=null, guest_id=<uuid>로 강등
+     */
+    suspend fun onLogout() {
+        val token = secure.getString(KEY_FCM_TOKEN) ?: return
+        logger.d("PushHandler", "onLogout: degrade token to guest")
+
+        val req = RegisterFcmModels.RegisterFcmRequest(
+            token = token,
+            platform = "android",
+            appVersion = readAppVersionOrNull(),
+            locale = Locale.getDefault().toLanguageTag(),
+            deviceId = readAndroidId(),
+            installationId = readInstallationsId()
+        )
+
+        runCatching {
+            api.registerFcmToken(req) // 현재는 Authorization 없으니 X-Guest-Id 헤더로 저장됨
+        }.onSuccess {
+            logger.d("PushHandler", "logout degrade success")
+        }.onFailure {
+            logger.e("PushHandler", "logout degrade failed", it)
+        }
     }
 }
