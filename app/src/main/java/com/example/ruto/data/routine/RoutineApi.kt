@@ -12,7 +12,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,28 +24,23 @@ class RoutineApi @Inject constructor(
     private val supabase: SupabaseClient,
     private val secure: SecureStore
 ) {
-    // private val base = BuildConfig.SUPABASE_URL
-    private val base = "https://wyqbynrmzndxuiahhdxg.supabase.co/functions/v1/create-routine"
+    private val base = BuildConfig.SUPABASE_URL
 
-    /*suspend fun createRoutine(req: RoutineCreateRequest, guestId: String?): RoutineCreateResponse {
-        val accessToken = supabase.auth.currentSessionOrNull()?.accessToken
-        // return client.post("$base/create-routine") {
-        return client.post(base) {
-            setBody(req)
-            header("apikey", BuildConfig.SUPABASE_KEY)
-            accessToken?.let { header(HttpHeaders.Authorization, "Bearer $it") }
-            guestId?.let { header("X-Guest-Id", it) }
-        }.body()
-    }*/
     suspend fun createRoutine(
         req: RoutineCreateRequest,
         anonKey: String = BuildConfig.SUPABASE_KEY
     ): RoutineCreateResponse {
-        return client.post("$base/create-routine") {
+        val resp = client.post("$base/functions/v1/create-routine") {
             header("apikey", anonKey)
             applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
             setBody(req)
-        }.body()
+        }
+        if (!resp.status.isSuccess()) {
+            val body = resp.bodyAsText()
+            throw IllegalStateException("create-routine failed: ${resp.status} $body")
+        }
+
+        return resp.body()
     }
 
 }
