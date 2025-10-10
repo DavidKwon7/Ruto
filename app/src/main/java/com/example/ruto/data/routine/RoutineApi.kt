@@ -4,11 +4,16 @@ import com.example.ruto.BuildConfig
 import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
+import com.example.ruto.domain.routine.RoutineListResponse
+import com.example.ruto.domain.routine.RoutineRead
+import com.example.ruto.domain.routine.RoutineUpdateRequest
+import com.example.ruto.domain.routine.RoutineUpdateResponse
 import com.example.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -43,4 +48,24 @@ class RoutineApi @Inject constructor(
         return resp.body()
     }
 
+    suspend fun getRoutineList(): RoutineListResponse =
+        client.get("$base/functions/v1/routines") {
+            header("apikey", BuildConfig.SUPABASE_KEY)
+            header(HttpHeaders.Accept, "application/json")
+            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
+        }.body()
+
+    suspend fun getRoutine(id: String): RoutineRead =
+        client.get("$base/functions/v1/routines/$id") {
+            header("apikey", BuildConfig.SUPABASE_KEY)
+            header(HttpHeaders.Accept, "application/json")
+            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
+        }.body()
+
+    suspend fun updateRoutine(req: RoutineUpdateRequest): RoutineUpdateResponse =
+        client.post("$base/functions/v1/update-routine") {
+            header("apikey", BuildConfig.SUPABASE_KEY)
+            applyAuthHeaders(supabase, secure)
+            setBody(req) // null 필드 제외되어 전송됨(explicitNulls=false)
+        }.body()
 }

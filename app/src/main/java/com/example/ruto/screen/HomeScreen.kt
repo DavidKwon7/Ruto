@@ -37,6 +37,8 @@ fun HomeScreen(
             Button(enabled = !ui.loading, onClick = { vm.signOut() }) { Text("로그아웃") }
             Spacer(Modifier.height(12.dp))
             Button(onClick = { navController.navigate("routineCreate") }) { Text("루틴 생성") }
+            Button(onClick = { navController.navigate("routineList") }) { Text("루틴 리스트") }
+
         }
         if (ui.loading) CircularProgressIndicator(Modifier.align(Alignment.Center))
     }}

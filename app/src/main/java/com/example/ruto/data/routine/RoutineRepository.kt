@@ -7,7 +7,9 @@ import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.routine.RoutineCadence
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
+import com.example.ruto.domain.routine.RoutineRead
 import com.example.ruto.domain.routine.RoutineTag
+import com.example.ruto.domain.routine.RoutineUpdateRequest
 import com.example.ruto.domain.routine.towrite
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -56,5 +58,17 @@ class RoutineRepository @Inject constructor(
             tags = tagStrings,
         )
         api.createRoutine(req)
+    }
+
+    suspend fun getRoutineList(): Result<List<RoutineRead>> = runCatching {
+        api.getRoutineList().items
+    }
+
+    suspend fun getRoutine(id: String): Result<RoutineRead> = runCatching {
+        api.getRoutine(id)
+    }
+
+    suspend fun updateRoutine(req: RoutineUpdateRequest): Result<Boolean> = runCatching {
+        api.updateRoutine(req).ok
     }
 }
