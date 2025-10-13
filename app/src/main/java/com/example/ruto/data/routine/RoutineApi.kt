@@ -8,6 +8,7 @@ import com.example.ruto.domain.routine.RoutineListResponse
 import com.example.ruto.domain.routine.RoutineRead
 import com.example.ruto.domain.routine.RoutineUpdateRequest
 import com.example.ruto.domain.routine.RoutineUpdateResponse
+import com.example.ruto.util.AppLogger
 import com.example.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -20,6 +21,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,7 +29,8 @@ import javax.inject.Singleton
 class RoutineApi @Inject constructor(
     private val client: HttpClient,
     private val supabase: SupabaseClient,
-    private val secure: SecureStore
+    private val secure: SecureStore,
+    private val logger: AppLogger
 ) {
     private val base = BuildConfig.SUPABASE_URL
 
@@ -54,13 +57,27 @@ class RoutineApi @Inject constructor(
             header(HttpHeaders.Accept, "application/json")
             applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
         }.body()
+    
+    suspend fun getRoutine(id: String): RoutineRead {
+        require(id.isNotBlank()) { "routine id is blank" }
 
-    suspend fun getRoutine(id: String): RoutineRead =
-        client.get("$base/functions/v1/routines/$id") {
+        val resp = client.get("$base/functions/v1/routines/$id") {
             header("apikey", BuildConfig.SUPABASE_KEY)
             header(HttpHeaders.Accept, "application/json")
-            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
-        }.body()
+            applyAuthHeaders(supabase, secure) // Authorization or X-Guest-Id
+        }
+        val raw = resp.bodyAsText()
+        logger.e("RoutineApi-getRoutine", raw)
+
+        if (!resp.status.isSuccess()) {
+            throw IllegalStateException("get-routine failed: ${resp.status} $raw")
+        }
+        return Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            explicitNulls = false
+        }.decodeFromString(raw)
+    }
 
     suspend fun updateRoutine(req: RoutineUpdateRequest): RoutineUpdateResponse =
         client.post("$base/functions/v1/update-routine") {
