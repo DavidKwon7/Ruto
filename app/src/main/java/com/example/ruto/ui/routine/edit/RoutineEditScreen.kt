@@ -4,6 +4,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,7 +24,17 @@ fun RoutineEditScreen(
     val ui by vm.ui.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("루틴 편집") }) }
+        topBar = { TopAppBar(
+            title = { Text("루틴 편집") },
+            actions = {
+                IconButton(
+                    onClick = { vm.delete { navController.popBackStack() } },
+                    enabled = !ui.saving
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = "삭제")
+                }
+            }
+        ) },
     ) { pad ->
         Box(Modifier.fillMaxSize().padding(pad)) {
             if (ui.loading) {

@@ -63,6 +63,10 @@ data class RoutineUpdateRequest(
 )
 
 @Serializable
-data class RoutineUpdateResponse(
-    val ok: Boolean
-)
+data class RoutineUpdateResponse(val ok: Boolean)
+
+@Serializable
+data class RoutineDeleteRequest(val id: String)
+
+@Serializable
+data class RoutineDeleteResponse(val ok: Boolean)

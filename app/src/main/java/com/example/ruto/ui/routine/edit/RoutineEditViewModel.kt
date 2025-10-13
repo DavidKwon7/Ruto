@@ -107,4 +107,18 @@ class RoutineEditViewModel @Inject constructor(
                 }
         }
     }
+
+    fun delete(onDone: () -> Unit) {
+        viewModelScope.launch {
+            _ui.update { it.copy(saving = true, error = null) }
+            repository.deleteRoutine(routineId)
+                .onSuccess { ok ->
+                    _ui.update { it.copy(saving = false) }
+                    if (ok) onDone()
+                }
+                .onFailure { e ->
+                    _ui.update { it.copy(saving = false, error = e.message) }
+                }
+        }
+    }
 }

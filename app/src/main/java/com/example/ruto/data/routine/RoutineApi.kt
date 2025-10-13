@@ -4,6 +4,8 @@ import com.example.ruto.BuildConfig
 import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
+import com.example.ruto.domain.routine.RoutineDeleteRequest
+import com.example.ruto.domain.routine.RoutineDeleteResponse
 import com.example.ruto.domain.routine.RoutineListResponse
 import com.example.ruto.domain.routine.RoutineRead
 import com.example.ruto.domain.routine.RoutineUpdateRequest
@@ -84,5 +86,12 @@ class RoutineApi @Inject constructor(
             header("apikey", BuildConfig.SUPABASE_KEY)
             applyAuthHeaders(supabase, secure)
             setBody(req) // null 필드 제외되어 전송됨(explicitNulls=false)
+        }.body()
+
+    suspend fun deleteRoutine(id: String): RoutineDeleteResponse =
+        client.post("$base/functions/v1/delete-routine") {
+            header("apikey", BuildConfig.SUPABASE_KEY)
+            applyAuthHeaders(supabase, secure)
+            setBody(RoutineDeleteRequest(id))
         }.body()
 }

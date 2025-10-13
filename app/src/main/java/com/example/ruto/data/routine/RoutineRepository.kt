@@ -71,4 +71,8 @@ class RoutineRepository @Inject constructor(
     suspend fun updateRoutine(req: RoutineUpdateRequest): Result<Boolean> = runCatching {
         api.updateRoutine(req).ok
     }
+
+    suspend fun deleteRoutine(id: String): Result<Boolean> = runCatching {
+        api.deleteRoutine(id).ok
+    }
 }
