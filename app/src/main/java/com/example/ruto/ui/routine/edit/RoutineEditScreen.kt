@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.RoutineCadence
+import com.example.ruto.ui.util.TimePickerDialogM3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -73,14 +75,56 @@ fun RoutineEditScreen(
                         Checkbox(checked = ui.notifyEnabled, onCheckedChange = vm::updateNotifyEnabled)
                         Text("알림 사용")
                     }
-                    if (ui.notifyEnabled) {
+                    /*if (ui.notifyEnabled) {
                         OutlinedTextField(
                             value = ui.notifyTime.orEmpty(),
                             onValueChange = { vm.updateNotifyTime(it) },
                             label = { Text("알림 시각(HH:mm)") },
                             modifier = Modifier.fillMaxWidth()
                         )
+                    }*/
+                    if (ui.notifyEnabled) {
+                        val (initHour, initMinute) = remember(ui.notifyTime) {
+                            parseHHmm(ui.notifyTime)
+                        }
+                        var showPicker by remember { mutableStateOf(false) }
+
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = ui.notifyTime.orEmpty(),
+                                onValueChange = {}, // 사용자가 직접 수정하지 않음
+                                readOnly = true,
+                                label = { Text("알림 시각(HH:mm)") },
+                                modifier = Modifier.weight(1f),
+                                trailingIcon = {
+                                    IconButton(onClick = { showPicker = true }) {
+                                        Icon(
+                                            imageVector = Icons.Default.DateRange,
+                                            contentDescription = "시간 선택"
+                                        )
+                                    }
+                                }
+                            )
+                            Button(onClick = { showPicker = true }) { Text("시간 선택") }
+                        }
+
+                        if (showPicker) {
+                            TimePickerDialogM3(
+                                initialHour = initHour,
+                                initialMinute = initMinute,
+                                onDismiss = { showPicker = false },
+                                onConfirm = { h, m ->
+                                    vm.updateNotifyTime("${pad2(h)}:${pad2(m)}")
+                                    showPicker = false
+                                }
+                            )
+                        }
                     }
+
                     Spacer(Modifier.height(12.dp))
 
                     // 태그 간단 편집(콤마 구분)
@@ -134,3 +178,20 @@ private fun CadenceRow(selected: RoutineCadence, onSelect: (RoutineCadence) -> U
         }
     }
 }
+
+private fun parseHHmm(hhmm: String?): Pair<Int, Int> {
+    return try {
+        if (hhmm.isNullOrBlank()) {
+            val now = java.time.LocalTime.now()
+            now.hour to now.minute
+        } else {
+            val parts = hhmm.split(":")
+            parts[0].toInt() to parts[1].toInt()
+        }
+    } catch (_: Exception) {
+        val now = java.time.LocalTime.now()
+        now.hour to now.minute
+    }
+}
+
+private fun pad2(n: Int) = n.toString().padStart(2, '0')
