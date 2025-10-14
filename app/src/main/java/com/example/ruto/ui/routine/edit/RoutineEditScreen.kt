@@ -14,7 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.RoutineCadence
+import com.example.ruto.ui.util.DatePickerDialogM3
 import com.example.ruto.ui.util.TimePickerDialogM3
+import com.example.ruto.util.epochMillisToYYYYMMDD
+import com.example.ruto.util.parseYYYYMMDD
+import com.example.ruto.util.toEpochMillis
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -55,34 +59,69 @@ fun RoutineEditScreen(
                     CadenceRow(ui.cadence) { vm.updateCadence(it) }
                     Spacer(Modifier.height(12.dp))
 
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    var showStartPicker by remember { mutableStateOf(false) }
+                    var showEndPicker by remember { mutableStateOf(false) }
+
+                    val startInitialMillis = remember(ui.startDate) { parseYYYYMMDD(ui.startDate)?.toEpochMillis() }
+                    val endInitialMillis = remember(ui.endDate) { parseYYYYMMDD(ui.endDate)?.toEpochMillis() }
+
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         OutlinedTextField(
                             value = ui.startDate,
-                            onValueChange = vm::updateStartDate,
+                            onValueChange = {}, // 수동 입력 막기
+                            readOnly = true,
                             label = { Text("시작일(YYYY-MM-DD)") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            trailingIcon = {
+                                IconButton(onClick = { showStartPicker = true }) {
+                                    Icon(Icons.Default.DateRange, contentDescription = "시작일 선택")
+                                }
+                            }
                         )
                         OutlinedTextField(
                             value = ui.endDate,
-                            onValueChange = vm::updateEndDate,
+                            onValueChange = {}, // 수동 입력 막기
+                            readOnly = true,
                             label = { Text("종료일(YYYY-MM-DD)") },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            trailingIcon = {
+                                IconButton(onClick = { showEndPicker = true }) {
+                                    Icon(Icons.Default.DateRange, contentDescription = "종료일 선택")
+                                }
+                            }
                         )
                     }
+
+                    if (showStartPicker) {
+                        DatePickerDialogM3(
+                            initialDateMillis = startInitialMillis,
+                            onDismiss = { showStartPicker = false },
+                            onConfirm = { millis ->
+                                vm.updateStartDate(epochMillisToYYYYMMDD(millis))
+                                showStartPicker = false
+                            }
+                        )
+                    }
+                    if (showEndPicker) {
+                        DatePickerDialogM3(
+                            initialDateMillis = endInitialMillis,
+                            onDismiss = { showEndPicker = false },
+                            onConfirm = { millis ->
+                                vm.updateEndDate(epochMillisToYYYYMMDD(millis))
+                                showEndPicker = false
+                            }
+                        )
+                    }
+
                     Spacer(Modifier.height(12.dp))
 
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Checkbox(checked = ui.notifyEnabled, onCheckedChange = vm::updateNotifyEnabled)
                         Text("알림 사용")
                     }
-                    /*if (ui.notifyEnabled) {
-                        OutlinedTextField(
-                            value = ui.notifyTime.orEmpty(),
-                            onValueChange = { vm.updateNotifyTime(it) },
-                            label = { Text("알림 시각(HH:mm)") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }*/
                     if (ui.notifyEnabled) {
                         val (initHour, initMinute) = remember(ui.notifyTime) {
                             parseHHmm(ui.notifyTime)
