@@ -1,11 +1,14 @@
 package com.example.ruto.ui.routine
 
 import android.os.Build
+import android.provider.CalendarContract
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,7 +32,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -71,23 +80,39 @@ fun RoutineListScreen(
 
 @Composable
 private fun RoutineList(items: List<RoutineRead>, onClick: (RoutineRead) -> Unit) {
+
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
         items(items) { r ->
+            var isFinishRoutine by remember { mutableStateOf(false) }
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
                     // .clickable { onClick(r) }
-                    .bounceClick { onClick(r) }
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(r.name, style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(4.dp))
-                    Text("${r.cadence} | ${r.startDate} ~ ${r.endDate}")
-                    if (r.notifyEnabled) {
-                        Text("알림: ${r.notifyTime ?: "-"} (${r.timezone})", style = MaterialTheme.typography.bodySmall)
+                    .bounceClick {
+                        isFinishRoutine = !isFinishRoutine
                     }
-                    if (r.tags.isNotEmpty()) {
+            ) {
+                Row(
+                    Modifier.background(
+                            if (isFinishRoutine) Color.Green
+                            else Color.LightGray
+                            )
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(r.name, style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(4.dp))
-                        Text("태그: ${r.tags.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+                        Text("${r.cadence} | ${r.startDate} ~ ${r.endDate}")
+                        if (r.notifyEnabled) {
+                            Text("알림: ${r.notifyTime ?: "-"} (${r.timezone})", style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (r.tags.isNotEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            Text("태그: ${r.tags.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    IconButton(
+                        onClick = { onClick(r) }
+                    ) {
+                        Icon(Icons.Default.Settings, "루틴 수정")
                     }
                 }
             }
