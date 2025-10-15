@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.RoutineRead
+import com.example.ruto.ui.util.bounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -74,7 +75,8 @@ private fun RoutineList(items: List<RoutineRead>, onClick: (RoutineRead) -> Unit
         items(items) { r ->
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
-                    .clickable { onClick(r) }
+                    // .clickable { onClick(r) }
+                    .bounceClick { onClick(r) }
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(r.name, style = MaterialTheme.typography.titleMedium)
