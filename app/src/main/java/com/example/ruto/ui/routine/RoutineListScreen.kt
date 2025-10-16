@@ -70,17 +70,25 @@ fun RoutineListScreen(
             when {
                 ui.loading -> CircularProgressIndicator(Modifier.padding(24.dp))
                 ui.error != null -> Text("에러: ${ui.error}", modifier = Modifier.padding(24.dp))
-                else -> RoutineList(ui.items) { r ->
+                /*else -> RoutineList(ui.items) { r ->
                     navController.navigate("routine/edit/${r.id}")
-                }
+                }*/
+                else -> RoutineList(
+                    items = ui.items,
+                    onClick = { r -> navController.navigate("routine/edit/${r.id}") },
+                    onToggleComplete = { r -> vm.toggleComplete(r) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun RoutineList(items: List<RoutineRead>, onClick: (RoutineRead) -> Unit) {
-
+private fun RoutineList(
+    items: List<RoutineRead>,
+    onClick: (RoutineRead) -> Unit,
+    onToggleComplete: (RoutineRead) -> Unit
+) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
         items(items) { r ->
             var isFinishRoutine by remember { mutableStateOf(false) }
@@ -89,12 +97,12 @@ private fun RoutineList(items: List<RoutineRead>, onClick: (RoutineRead) -> Unit
                     // .clickable { onClick(r) }
                     .bounceClick {
                         isFinishRoutine = !isFinishRoutine
+                        if (isFinishRoutine) onToggleComplete(r)
                     }
             ) {
                 Row(
                     Modifier.background(
-                            if (isFinishRoutine) Color.Green
-                            else Color.LightGray
+                            if (isFinishRoutine) Color.Green else Color.LightGray
                             )
                 ) {
                     Column(Modifier.padding(16.dp)) {

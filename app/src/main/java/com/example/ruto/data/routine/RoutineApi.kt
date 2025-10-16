@@ -2,6 +2,9 @@ package com.example.ruto.data.routine
 
 import com.example.ruto.BuildConfig
 import com.example.ruto.data.security.SecureStore
+import com.example.ruto.domain.routine.CompleteBatchRequest
+import com.example.ruto.domain.routine.CompleteBatchResponse
+import com.example.ruto.domain.routine.CompleteItem
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
 import com.example.ruto.domain.routine.RoutineDeleteRequest
@@ -93,5 +96,12 @@ class RoutineApi @Inject constructor(
             header("apikey", BuildConfig.SUPABASE_KEY)
             applyAuthHeaders(supabase, secure)
             setBody(RoutineDeleteRequest(id))
+        }.body()
+
+    suspend fun completeRoutinesBatch(items: List<CompleteItem>): CompleteBatchResponse =
+        client.post("$base/functions/v1/complete-routines") {
+            header("apikey", BuildConfig.SUPABASE_KEY)
+            applyAuthHeaders(supabase, secure)
+            setBody(CompleteBatchRequest(items))
         }.body()
 }

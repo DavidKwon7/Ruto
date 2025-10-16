@@ -30,6 +30,11 @@ ksp = "2.2.10-2.0.2"
 googleGmsGoogleServices = "4.4.3"
 firebaseMessaging = "25.0.1"
 
+room = "2.8.2"
+workRuntimeKtx = "2.10.5"
+hiltCommon = "1.3.0"
+
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -83,6 +88,13 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 
+# Room
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -98,3 +110,4 @@ google-gms-google-services = { id = "com.google.gms.google-services", version.re
 
 [bundles]
 supabase = ["supabase-postgrest", "supabase-gotrue"]
+androidx-room = ["androidx-room-runtime", "androidx-room-ktx", ]
