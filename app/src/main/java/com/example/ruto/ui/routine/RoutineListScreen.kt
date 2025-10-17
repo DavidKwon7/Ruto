@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.RoutineRead
 import com.example.ruto.ui.util.bounceClick
@@ -51,7 +52,7 @@ fun RoutineListScreen(
     navController: NavHostController,
     vm: RoutineListViewModel = hiltViewModel()
 ) {
-    val ui by vm.ui.collectAsState()
+    val ui by vm.ui.collectAsStateWithLifecycle()
 
     /*LaunchedEffect(ui.items) {
         vm.refresh()
@@ -75,7 +76,7 @@ fun RoutineListScreen(
                 }*/
                 else -> RoutineList(
                     items = ui.items,
-                    onClick = { r -> navController.navigate("routine/edit/${r.id}") },
+                    onClick = { r -> navController.navigate("routine/edit/${r.routine.id}") },
                     onToggleComplete = { r -> vm.toggleComplete(r) }
                 )
             }
@@ -85,32 +86,36 @@ fun RoutineListScreen(
 
 @Composable
 private fun RoutineList(
-    items: List<RoutineRead>,
-    onClick: (RoutineRead) -> Unit,
-    onToggleComplete: (RoutineRead) -> Unit
+    items: List<Item>,
+    onClick: (Item) -> Unit,
+    onToggleComplete: (Item) -> Unit
 ) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
-        items(items) { r ->
-            var isFinishRoutine by remember { mutableStateOf(false) }
+        items(items, key = {it.routine.id}) { item ->
+            val r = item.routine
+            val completed = item.completedToday
+
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
                     // .clickable { onClick(r) }
                     .bounceClick {
-                        isFinishRoutine = !isFinishRoutine
-                        if (isFinishRoutine) onToggleComplete(r)
+                        onToggleComplete(item)
                     }
             ) {
                 Row(
-                    Modifier.background(
-                            if (isFinishRoutine) Color.Green else Color.LightGray
-                            )
+                    Modifier
+                        .background(if (completed) Color(0xFF98FB98) else Color(0xFFD3D3D3))
+                        .padding(12.dp)
                 ) {
-                    Column(Modifier.padding(16.dp)) {
+                    Column(Modifier.weight(1f)) {
                         Text(r.name, style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(4.dp))
                         Text("${r.cadence} | ${r.startDate} ~ ${r.endDate}")
                         if (r.notifyEnabled) {
-                            Text("알림: ${r.notifyTime ?: "-"} (${r.timezone})", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "알림: ${r.notifyTime ?: "-"} (${r.timezone})",
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                         if (r.tags.isNotEmpty()) {
                             Spacer(Modifier.height(4.dp))
@@ -118,7 +123,7 @@ private fun RoutineList(
                         }
                     }
                     IconButton(
-                        onClick = { onClick(r) }
+                        onClick = { onClick(item) }
                     ) {
                         Icon(Icons.Default.Settings, "루틴 수정")
                     }
