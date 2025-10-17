@@ -1,5 +1,8 @@
 package com.example.ruto.data.sync
 
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.ruto.data.local.complete.PendingComplete
@@ -27,5 +30,13 @@ class CompleteQueue @Inject constructor(
 
         // 네트워크 연결 시 자동 전송
         val req = OneTimeWorkRequestBuilder<SyncCompletesWorker>()
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+
+        wm.enqueueUniqueWork("sync-completes", ExistingWorkPolicy.KEEP, req)
     }
 }
