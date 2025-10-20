@@ -1,12 +1,13 @@
 package com.example.ruto.domain.routine
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class CompleteItem(
-    val routineId: String,
-    val completedAt: String, // ISO-8601 UTC, e.g. 2025-10-15T09:20:00Z
-    val opId: String         // 멱등키(UUID)
+    @SerialName("routine_id") val routineId: String,
+    @SerialName("completed_at") val completedAt: String, // ISO-8601 UTC, e.g. 2025-10-15T09:20:00Z
+    @SerialName("op_id")val opId: String         // 멱등키(UUID)
 )
 
 @Serializable

@@ -2,6 +2,8 @@ package com.example.ruto.di
 
 import android.content.Context
 import androidx.work.WorkManager
+import androidx.work.WorkerFactory
+import com.example.ruto.workManager.AppWorkerFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,4 +20,8 @@ object WorkManagerModule {
     fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
         WorkManager.getInstance(context)
 
+    @Provides
+    @Singleton
+    fun provideWorkerFactory(@ApplicationContext context: Context) =
+        AppWorkerFactory(context)
 }

@@ -8,6 +8,8 @@ import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.work.Configuration
+import androidx.work.WorkerFactory
+import com.example.ruto.workManager.AppWorkerFactory
 import com.kakao.sdk.common.KakaoSdk
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -15,12 +17,16 @@ import javax.inject.Inject
 @HiltAndroidApp
 class MyApp() : Application(), Configuration.Provider {
 
-    @Inject lateinit var workerFactory: HiltWorkerFactory
+    // @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var workerFactory: AppWorkerFactory
 
     override fun onCreate() {
         super.onCreate()
         KakaoSdk.init(this, BuildConfig.KAKAO_NATIVE_APP_KEY)
         ensureRoutineChannel(this)
+
+        val cfg = workManagerConfiguration
+        androidx.work.WorkManager.initialize(this, cfg)
     }
 
 

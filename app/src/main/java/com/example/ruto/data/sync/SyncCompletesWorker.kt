@@ -1,21 +1,20 @@
 package com.example.ruto.data.sync
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.ruto.data.local.complete.PendingCompleteDao
 import com.example.ruto.data.routine.RoutineApi
 import com.example.ruto.domain.routine.CompleteItem
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
+import com.example.ruto.util.AppLogger
 
-@HiltWorker
-class SyncCompletesWorker @AssistedInject constructor(
-    @Assisted appContext: Context,
-    @Assisted params: WorkerParameters,
+class SyncCompletesWorker(
+    appContext: Context,
+    params: WorkerParameters,
     private val dao: PendingCompleteDao,
-    private val api: RoutineApi
+    private val api: RoutineApi,
+    private val logger: AppLogger
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -29,6 +28,7 @@ class SyncCompletesWorker @AssistedInject constructor(
                 opId = pendingComplete.opId
             ) }
             val resp = api.completeRoutinesBatch(payload)
+            logger.d("SyncCompletesWorker", "resp: ok=${resp.ok}, code=${resp.processed}, body=${resp.ok}")
 
             if (resp.ok) {
                 dao.deleteByOpIds(batch.map { it.opId })
@@ -36,7 +36,8 @@ class SyncCompletesWorker @AssistedInject constructor(
             } else {
                 Result.retry()
             }
-        }.getOrElse {
+        }.getOrElse { e ->
+            Log.e("SyncCompletesWorker", "error", e)
             Result.retry()
         }
     }

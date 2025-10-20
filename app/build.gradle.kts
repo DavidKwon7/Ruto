@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
 
+    id("org.jetbrains.kotlin.kapt")
     kotlin("plugin.serialization") version "2.2.10"
     alias(libs.plugins.google.gms.google.services)
 }
@@ -163,6 +164,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    // kapt("androidx.hilt:hilt-compiler:1.3.0")
 
     // SplashScreen
     implementation(libs.core.splashscreen)
