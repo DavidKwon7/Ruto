@@ -38,6 +38,7 @@ fun HomeScreen(
             Spacer(Modifier.height(12.dp))
             Button(onClick = { navController.navigate("routineCreate") }) { Text("루틴 생성") }
             Button(onClick = { navController.navigate("routineList") }) { Text("루틴 리스트") }
+            Button(onClick = { navController.navigate("statistics") }) { Text("루틴 히스토리") }
 
         }
         if (ui.loading) CircularProgressIndicator(Modifier.align(Alignment.Center))

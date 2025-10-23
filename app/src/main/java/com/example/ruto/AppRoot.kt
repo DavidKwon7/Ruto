@@ -25,6 +25,7 @@ import com.example.ruto.ui.permission.EnsureNotificationPermission
 import com.example.ruto.ui.routine.RoutineCreateScreen
 import com.example.ruto.ui.routine.RoutineListScreen
 import com.example.ruto.ui.routine.edit.RoutineEditScreen
+import com.example.ruto.ui.statistics.StatisticsScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -61,6 +62,7 @@ fun AppRoot(
         composable("home") { HomeScreen(nav) }
         composable("routineList") { RoutineListScreen(nav) }
         composable("routineCreate") {RoutineCreateScreen(nav)}
+        composable("statistics") { StatisticsScreen(nav) }
         composable(
             route = "routine/edit/{id}",
             arguments = listOf(navArgument("id"){ defaultValue = "" })

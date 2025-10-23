@@ -5,6 +5,7 @@ import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.routine.CompleteBatchRequest
 import com.example.ruto.domain.routine.CompleteBatchResponse
 import com.example.ruto.domain.routine.CompleteItem
+import com.example.ruto.domain.routine.MonthlyCompletionsResponse
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
 import com.example.ruto.domain.routine.RoutineDeleteRequest
@@ -25,6 +26,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
+import io.ktor.http.URLBuilder
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -104,4 +106,27 @@ class RoutineApi @Inject constructor(
             applyAuthHeaders(supabase, secure)
             setBody(CompleteBatchRequest(items))
         }.body()
+
+    suspend fun fetchMonthlyCompletions(
+        tz: String,
+        month: String = "current",        // "YYYY-MM" or "current"
+        routineIdsCsv: String? = null
+    ): MonthlyCompletionsResponse {
+        val url = URLBuilder("$base/functions/v1/routine-completions-monthly").apply {
+            parameters.append("tz", tz)
+            parameters.append("month", month)
+            routineIdsCsv?.let { parameters.append("routine_ids", it) }
+        }.buildString()
+
+        val resp = client.get(url) {
+            header("apikey", BuildConfig.SUPABASE_KEY)
+            header(HttpHeaders.Accept, "application/json")
+            applyAuthHeaders(supabase, secure)  // ✅ 로그인/게스트 헤더 공통 적용
+        }
+        if (!resp.status.isSuccess()) {
+            throw IllegalStateException("monthly fetch failed: ${resp.status} ${resp.body<String>()}")
+        }
+        return resp.body()
+    }
+
 }
