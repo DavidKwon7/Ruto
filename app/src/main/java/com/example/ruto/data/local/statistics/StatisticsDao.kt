@@ -7,7 +7,7 @@ import androidx.room.Query
 
 @Dao
 interface StatisticsDao {
-    @Query("SELECT * FROM statistics_cache WHERE key = :key LIMIT 1")
+    @Query("SELECT * FROM statistics_cache WHERE `key` = :key LIMIT 1")
     suspend fun get(key: String): StatisticsLocal?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

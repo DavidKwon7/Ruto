@@ -16,16 +16,11 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.ruto.domain.AuthState
 import com.example.ruto.screen.HomeScreen
 import com.example.ruto.screen.LoginScreen
 import com.example.ruto.ui.auth.AuthViewModel
 import com.example.ruto.ui.permission.EnsureNotificationPermission
-import com.example.ruto.ui.routine.RoutineCreateScreen
-import com.example.ruto.ui.routine.RoutineListScreen
-import com.example.ruto.ui.routine.edit.RoutineEditScreen
-import com.example.ruto.ui.statistics.StatisticsScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -51,7 +46,6 @@ fun AppRoot(
             launchSingleTop = true
         }
     }
-
     NavHost(navController = nav, startDestination = "splash") {
         composable("splash") {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -60,14 +54,5 @@ fun AppRoot(
         }
         composable("login") { LoginScreen(nav) }
         composable("home") { HomeScreen(nav) }
-        composable("routineList") { RoutineListScreen(nav) }
-        composable("routineCreate") {RoutineCreateScreen(nav)}
-        composable("statistics") { StatisticsScreen(nav) }
-        composable(
-            route = "routine/edit/{id}",
-            arguments = listOf(navArgument("id"){ defaultValue = "" })
-        ) {
-            RoutineEditScreen(nav)
-        }
     }
 }
