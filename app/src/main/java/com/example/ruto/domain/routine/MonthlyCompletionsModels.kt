@@ -5,14 +5,14 @@ import kotlinx.serialization.SerialName
 
 
 @Serializable
-data class MonthlyCompletionsResponse(
-    val range: MonthlyRange,
+data class StatisticsCompletionsResponse(
+    val range: StatisticsRange,
     val heatmap: List<HeatmapDay>,
     val routines: List<RoutineDays>
 )
 
 @Serializable
-data class MonthlyRange(
+data class StatisticsRange(
     val from: String,          // 2025-10-01T00:00:00+09:00
     @SerialName("toExclusive") val toExclusive: String,
     val tz: String

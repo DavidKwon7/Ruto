@@ -6,6 +6,7 @@ import com.example.ruto.data.local.AppDatabase
 import com.example.ruto.data.local.MIGRATION_1_2
 import com.example.ruto.data.local.RoutineCompletionDao
 import com.example.ruto.data.local.complete.PendingCompleteDao
+import com.example.ruto.data.local.statistics.StatisticsDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,7 +31,13 @@ object DatabaseModule {
     fun providePendingDao(db: AppDatabase): PendingCompleteDao =
         db.pendingCompleteDao()
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideRoutineCompletionDao(db: AppDatabase): RoutineCompletionDao =
         db.routineCompletionDao()
+
+    @Provides
+    @Singleton
+    fun provideStatisticsDao(db: AppDatabase): StatisticsDao =
+        db.statisticsDao()
 }

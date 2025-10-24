@@ -5,7 +5,7 @@ import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.routine.CompleteBatchRequest
 import com.example.ruto.domain.routine.CompleteBatchResponse
 import com.example.ruto.domain.routine.CompleteItem
-import com.example.ruto.domain.routine.MonthlyCompletionsResponse
+import com.example.ruto.domain.routine.StatisticsCompletionsResponse
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
 import com.example.ruto.domain.routine.RoutineDeleteRequest
@@ -17,7 +17,6 @@ import com.example.ruto.domain.routine.RoutineUpdateResponse
 import com.example.ruto.util.AppLogger
 import com.example.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -111,7 +110,7 @@ class RoutineApi @Inject constructor(
         tz: String,
         month: String = "current",        // "YYYY-MM" or "current"
         routineIdsCsv: String? = null
-    ): MonthlyCompletionsResponse {
+    ): StatisticsCompletionsResponse {
         val url = URLBuilder("$base/functions/v1/routine-completions-monthly").apply {
             parameters.append("tz", tz)
             parameters.append("month", month)

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ruto.data.routine.RoutineMonthlyRepository
 import com.example.ruto.domain.routine.HeatmapDay
-import com.example.ruto.domain.routine.MonthlyCompletionsResponse
+import com.example.ruto.domain.routine.StatisticsCompletionsResponse
 import com.example.ruto.domain.routine.RoutineDays
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +41,7 @@ class StatisticsViewModel @Inject constructor(
             _ui.update { it.copy(loading = true, error = null, month = month, tz = tz) }
             runCatching {
                 repo.getMonthly(tz = tz, month = month)
-            }.onSuccess { res: MonthlyCompletionsResponse ->
+            }.onSuccess { res: StatisticsCompletionsResponse ->
                 _ui.update { it.copy(loading = false, heatmap = res.heatmap, routineDays = res.routines) }
             }.onFailure { e ->
                 _ui.update { it.copy(loading = false, error = e.message) }
