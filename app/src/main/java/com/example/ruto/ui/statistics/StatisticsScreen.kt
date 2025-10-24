@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.HeatmapDay
+import com.example.ruto.domain.routine.RoutineDays
 import io.ktor.websocket.Frame
 import java.time.LocalDate
 
@@ -52,7 +54,14 @@ fun StatisticsScreen(
             when {
                 ui.loading -> CircularProgressIndicator(Modifier.padding(24.dp))
                 ui.error != null -> Text("에러: ${ui.error}", modifier = Modifier.padding(24.dp))
-                else -> HeatmapGrid(ui.heatmap)
+                else -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        //HeatmapGrid(ui.heatmap)
+                        RoutineRows(ui.heatmap.size, ui.routineDays)
+                    }
+                }
             }
         }
     }
@@ -108,6 +117,30 @@ private fun DayBox(day: HeatmapDay) {
         )
     }
 }
+
+@Composable
+fun RoutineRows(
+    monthDays: Int,
+    routines: List<RoutineDays>
+) {
+    Column(Modifier.fillMaxWidth().padding(12.dp)) {
+        routines.forEach { rd ->
+            Text(rd.name.ifBlank { "제목 없음" }, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                rd.days.take(monthDays).forEach { v ->
+                    Box(
+                        Modifier
+                            .size(12.dp)
+                            .background(if (v == 1) Color(0xFF2ECC71) else Color(0xFFEAECEE))
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
 
 private fun colorForPercent(p: Int): Color = when {
     p >= 80 -> Color(0xFF2ECC71) // 녹색

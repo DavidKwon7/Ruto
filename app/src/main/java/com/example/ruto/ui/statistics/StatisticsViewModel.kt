@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ruto.data.routine.RoutineMonthlyRepository
 import com.example.ruto.domain.routine.HeatmapDay
 import com.example.ruto.domain.routine.MonthlyCompletionsResponse
+import com.example.ruto.domain.routine.RoutineDays
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ data class MonthlyUiState(
     val month: String = "",               // "YYYY-MM"
     val tz: String = ZoneId.systemDefault().id,
     val heatmap: List<HeatmapDay> = emptyList(),
+    val routineDays: List<RoutineDays> = emptyList(),
     val error: String? = null
 )
 
@@ -40,7 +42,7 @@ class StatisticsViewModel @Inject constructor(
             runCatching {
                 repo.getMonthly(tz = tz, month = month)
             }.onSuccess { res: MonthlyCompletionsResponse ->
-                _ui.update { it.copy(loading = false, heatmap = res.heatmap) }
+                _ui.update { it.copy(loading = false, heatmap = res.heatmap, routineDays = res.routines) }
             }.onFailure { e ->
                 _ui.update { it.copy(loading = false, error = e.message) }
             }

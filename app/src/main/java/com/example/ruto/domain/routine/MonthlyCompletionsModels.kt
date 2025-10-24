@@ -29,5 +29,6 @@ data class HeatmapDay(
 @Serializable
 data class RoutineDays(
     @SerialName("routine_id") val routineId: String,
+    val name: String = "",
     val days: List<Int>        // 해당 달 일수길이의 0/1 배열
 )
