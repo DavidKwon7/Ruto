@@ -3,19 +3,29 @@ package com.example.ruto.ui.statistics
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,8 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.HeatmapDay
-import com.example.ruto.domain.routine.RoutineDays
-import io.ktor.websocket.Frame
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,53 +50,80 @@ import java.time.LocalDate
 fun StatisticsScreen(
     navController: NavHostController,
     vm: StatisticsViewModel = hiltViewModel(),
-    month: String = LocalDate.now().toString().substring(0,7)   // "YYYY-MM"
+    month: String = LocalDate.now().toString().substring(0, 7) // "YYYY-MM"
 ) {
     val ui by vm.ui.collectAsState()
     LaunchedEffect(month) { vm.load(month = month) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Frame.Text("월간 완료 현황 ($month)") }) }
+        topBar = { TopAppBar(title = { Text("월간 완료 현황 ($month)") }) }
     ) { pad ->
-        Box(Modifier.fillMaxSize().padding(pad)) {
-            when {
-                ui.loading -> CircularProgressIndicator(Modifier.padding(24.dp))
-                ui.error != null -> Text("에러: ${ui.error}", modifier = Modifier.padding(24.dp))
-                else -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        //HeatmapGrid(ui.heatmap)
-                        RoutineRows(ui.heatmap.size, ui.routineDays)
+        when {
+            ui.loading -> CircularProgressIndicator(Modifier.padding(24.dp))
+            ui.error != null -> Text("에러: ${ui.error}", modifier = Modifier.padding(24.dp))
+            else -> {
+                val listState = rememberLazyListState()
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(pad),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    // 1) Heatmap를 리스트 헤더로
+                    item(key = "heatmap") {
+                        HeatmapGrid(
+                            heatmap = ui.heatmap,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 140.dp, max = 240.dp) // 중요: 전체 높이 점유 금지
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Divider()
+                        Spacer(Modifier.height(8.dp))
                     }
+
+                    // 2) 루틴 행들
+                    items(
+                        items = ui.routineDays,
+                        key = { it.routineId } // 성능/상태 보존
+                    ) { rd ->
+                        RoutineRowItem(
+                            title = rd.name.ifBlank { "제목 없음" },
+                            monthDays = ui.heatmap.size, // 월 일수(heatmap 크기와 동일 가정)
+                            days = rd.days
+                        )
+                    }
+
+                    item { Spacer(Modifier.height(24.dp)) } // 바닥 여백
                 }
             }
         }
     }
 }
 
+/** Heatmap: LazyVerticalGrid에서 fillMaxSize() 제거 & 높이 한정 */
 @Composable
-private fun HeatmapGrid(heatmap: List<HeatmapDay>) {
-    // 아주 단순한 7열 그리드 (요일 보정 X). 달력처럼 보정하려면 시작 요일 계산해서 앞에 빈칸 넣어주세요.
+private fun HeatmapGrid(
+    heatmap: List<HeatmapDay>,
+    modifier: Modifier = Modifier
+) {
     val columns = 7
     val rows = (heatmap.size + columns - 1) / columns
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = modifier, // <-- fillMaxSize() 없앰
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        userScrollEnabled = true
     ) {
         items(heatmap.size) { idx ->
-            val day = heatmap[idx]
-            DayBox(day)
+            DayBox(heatmap[idx])
         }
-        // 남는 칸 채우기(선택)
         val remain = rows * columns - heatmap.size
         if (remain > 0) {
-            items(remain) {
-                Box(Modifier.size(40.dp))
-            }
+            items(remain) { Box(Modifier.size(40.dp)) }
         }
     }
 }
@@ -99,11 +134,11 @@ private fun DayBox(day: HeatmapDay) {
     Column(
         modifier = Modifier
             .size(40.dp)
-            .background(fill)
+            .background(fill, shape = RoundedCornerShape(6.dp))
             .padding(2.dp)
     ) {
         Text(
-            text = day.date.takeLast(2),  // 날짜 DD
+            text = day.date.takeLast(2),
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
@@ -118,34 +153,45 @@ private fun DayBox(day: HeatmapDay) {
     }
 }
 
+/** 각 루틴 한 줄 */
 @Composable
-fun RoutineRows(
+private fun RoutineRowItem(
+    title: String,
     monthDays: Int,
-    routines: List<RoutineDays>
+    days: List<Int>
 ) {
-    Column(Modifier.fillMaxWidth().padding(12.dp)) {
-        routines.forEach { rd ->
-            Text(rd.name.ifBlank { "제목 없음" }, style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                rd.days.take(monthDays).forEach { v ->
-                    Box(
-                        Modifier
-                            .size(12.dp)
-                            .background(if (v == 1) Color(0xFF2ECC71) else Color(0xFFEAECEE))
-                    )
-                }
+    Column(Modifier.fillMaxWidth()) {
+        Text(title, style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(6.dp))
+
+        // 일자 칸이 화면보다 길 수 있으니 가로 스크롤 허용(옵션)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            days.take(monthDays).forEach { v ->
+                Box(
+                    Modifier
+                        .size(12.dp)
+                        .background(
+                            if (v == 1) Color(0xFF2ECC71) else Color(0xFFEAECEE),
+                            shape = CircleShape
+                        )
+                )
             }
-            Spacer(Modifier.height(8.dp))
         }
+        Spacer(Modifier.height(12.dp))
+        Divider()
+        Spacer(Modifier.height(8.dp))
     }
 }
 
-
 private fun colorForPercent(p: Int): Color = when {
-    p >= 80 -> Color(0xFF2ECC71) // 녹색
+    p >= 80 -> Color(0xFF2ECC71)
     p >= 50 -> Color(0xFF7DCEA0)
     p >= 20 -> Color(0xFFA9DFBF)
     p > 0   -> Color(0xFFD5F5E3)
-    else    -> Color(0xFFEAECEE) // 회색
+    else    -> Color(0xFFEAECEE)
 }
