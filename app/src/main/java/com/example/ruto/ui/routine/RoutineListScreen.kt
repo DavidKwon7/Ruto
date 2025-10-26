@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.ruto.ui.util.bounceClick
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -46,13 +48,17 @@ fun RoutineListScreen(
     navController: NavHostController,
     vm: RoutineListViewModel = hiltViewModel()
 ) {
+    val scope = rememberCoroutineScope()
     val ui by vm.ui.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("내 루틴") },
-                actions = { IconButton(onClick = { vm.refresh() }) { Icon(Icons.Default.Refresh, "루틴 수정") } },
+                actions = { IconButton(onClick = {
+                    scope.launch {
+                    vm.refresh() }
+                }) { Icon(Icons.Default.Refresh, "루틴 수정") } },
             )
         },
         floatingActionButton = {
@@ -72,9 +78,6 @@ fun RoutineListScreen(
             when {
                 ui.loading -> CircularProgressIndicator(Modifier.padding(24.dp))
                 ui.error != null -> Text("에러: ${ui.error}", modifier = Modifier.padding(24.dp))
-                /*else -> RoutineList(ui.items) { r ->
-                    navController.navigate("routine/edit/${r.id}")
-                }*/
                 else -> RoutineList(
                     items = ui.items,
                     onClick = { r -> navController.navigate("tab/routine/edit/${r.routine.id}") },

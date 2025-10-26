@@ -11,10 +11,11 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "routine_completions",
-    indices = [Index(value = ["routineId", "date"], unique = true)]
+    indices = [Index(value = ["ownerKey", "routineId", "date"], unique = true)]
 )
 data class RoutineCompletionLocal(
     @PrimaryKey val key: String,      // "$routineId#$date"
+    val ownerKey: String,
     val routineId: String,
     val date: String,                 // YYYY-MM-DD (로컬 타임존 기준)
     val completed: Boolean,           // true = 완료

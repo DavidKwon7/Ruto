@@ -6,6 +6,7 @@ import com.example.ruto.data.local.AppDatabase
 import com.example.ruto.data.local.MIGRATION_1_2
 import com.example.ruto.data.local.RoutineCompletionDao
 import com.example.ruto.data.local.complete.PendingCompleteDao
+import com.example.ruto.data.local.routine.RoutineDao
 import com.example.ruto.data.local.statistics.StatisticsDao
 import dagger.Module
 import dagger.Provides
@@ -40,4 +41,9 @@ object DatabaseModule {
     @Singleton
     fun provideStatisticsDao(db: AppDatabase): StatisticsDao =
         db.statisticsDao()
+
+    @Provides
+    @Singleton
+    fun provideRoutineDao(db: AppDatabase): RoutineDao =
+        db.routineDao()
 }

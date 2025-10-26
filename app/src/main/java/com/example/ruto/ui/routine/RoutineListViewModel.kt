@@ -39,56 +39,66 @@ class RoutineListViewModel @Inject constructor(
     private val _ui = MutableStateFlow(RoutineListUiState(loading = true))
     val ui: StateFlow<RoutineListUiState> = _ui.asStateFlow()
 
-    private var listCache: List<RoutineRead> = emptyList()
-    private var completesJob: Job? = null
+    private val doneToday = MutableStateFlow<Set<String>>(emptySet())
 
-    init { refresh() }
 
-    fun refresh() {
+    init {
+        // 루틴 목록 스트림
+        repository.observeRoutineList()
+            .onEach { list ->
+                _ui.update { state ->
+                    state.copy(
+                        loading = false,
+                        items = list.map { r -> Item(r, completedToday = r.id in doneToday.value) }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+
+        // 오늘 완료 스트림
+        repository.observeTodayCompletions()
+            .onEach { rows ->
+                val set = rows.filter { it.completed }.map { it.routineId }.toSet()
+                doneToday.value = set
+                // 목록에 반영
+                _ui.update { state ->
+                    state.copy(
+                        items = state.items.map { it.copy(completedToday = it.routine.id in set) }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+
+        // 최초 서버 동기화 (화면 진입 시 1회)
         viewModelScope.launch {
-            _ui.update { it.copy(loading = true, error = null) }
-            repository.getRoutineList()
-                .onSuccess { list ->
-                    listCache = list
-                    // 완료 캐시와 결합 스트림 구독
-                    completesJob?.cancel()
-                    completesJob = repository.observeTodayCompletions()
-                        .onEach { completes ->
-                            val doneSet = completes.filter { it.completed }.map { it.routineId }.toSet()
-                            _ui.update {
-                                it.copy(
-                                    loading = false,
-                                    items = listCache.map { r -> Item(routine = r, completedToday = r.id in doneSet) }
-                                )
-                            }
-                        }
-                        .launchIn(viewModelScope)
-                }
-                .onFailure { e ->
-                    _ui.update { it.copy(loading = false, error = e.message) }
-                }
+            runCatching { repository.refreshFromServer() }
         }
     }
 
+    /** 수동 새로고침용 */
+    fun refresh() {
+        viewModelScope.launch {
+            runCatching { repository.refreshFromServer() }
+        }
+    }
+
+    /** 완료 토글 (낙관적 반영 + 로컬 저장 + 완료면 큐 전송) */
     fun toggleComplete(item: Item) {
         val r = item.routine
         val toCompleted = !item.completedToday
 
-        // 1) 낙관적 UI 업데이트 (즉시 색상 변경)
         _ui.update { state ->
             state.copy(
-                items = state.items.map { it ->
-                    if (it.routine.id == r.id) it.copy(completedToday = true) else it
+                items = state.items.map { cur ->
+                    if (cur.routine.id == r.id) cur.copy(completedToday = toCompleted) else cur
                 }
             )
         }
 
-        // 2) 로컬 DB에 영속 반영 → 화면 재입장/프로세스 재시작에도 유지
         viewModelScope.launch {
             repository.setCompletionLocal(r.id, completed = toCompleted)
         }
 
-        // 3) 완료(true)일 때만 서버 전송 큐에 추가 (해제는 로컬만)
         if (toCompleted) {
             viewModelScope.launch {
                 queue.enqueue(routineId = r.id, completedAt = Instant.now())
