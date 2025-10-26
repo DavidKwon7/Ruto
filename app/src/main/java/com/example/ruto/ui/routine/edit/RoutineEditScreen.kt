@@ -4,6 +4,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
@@ -29,6 +31,11 @@ fun RoutineEditScreen(
 ) {
     val ui by vm.ui.collectAsState()
 
+    // 저장 성공 시 뒤로
+    LaunchedEffect(ui.saved) {
+        if (ui.saved) navController.popBackStack()
+    }
+
     Scaffold(
         topBar = { TopAppBar(
             title = { Text("루틴 편집") },
@@ -46,7 +53,9 @@ fun RoutineEditScreen(
             if (ui.loading) {
                 CircularProgressIndicator(Modifier.padding(24.dp))
             } else {
-                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Column(Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth().padding(16.dp)) {
                     OutlinedTextField(
                         value = ui.name,
                         onValueChange = vm::updateName,
@@ -194,11 +203,6 @@ fun RoutineEditScreen(
                         if (ui.saving) CircularProgressIndicator(Modifier.size(18.dp))
                         else Text("저장")
                     }
-
-                    // 저장 성공 시 뒤로
-                    LaunchedEffect(ui.saved) {
-                        if (ui.saved) navController.popBackStack()
-                    }
                 }
             }
         }
@@ -218,6 +222,7 @@ private fun CadenceRow(selected: RoutineCadence, onSelect: (RoutineCadence) -> U
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun parseHHmm(hhmm: String?): Pair<Int, Int> {
     return try {
         if (hhmm.isNullOrBlank()) {

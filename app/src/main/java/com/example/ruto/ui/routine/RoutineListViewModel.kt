@@ -44,22 +44,6 @@ class RoutineListViewModel @Inject constructor(
 
     init { refresh() }
 
-    /*fun refresh() {
-        viewModelScope.launch {
-            _ui.update { it.copy(loading = true, error = null) }
-            repository.getRoutineList()
-                .onSuccess { list -> _ui.update { it.copy(loading = false, items = list) } }
-                .onFailure { e -> _ui.update { it.copy(loading = false, error = e.message) } }
-        }
-    }
-
-    fun toggleComplete(r: RoutineRead) {
-        viewModelScope.launch {
-            queue.enqueue(
-                routineId = r.id,
-                completedAt = Instant.now())
-        }
-    }*/
     fun refresh() {
         viewModelScope.launch {
             _ui.update { it.copy(loading = true, error = null) }
@@ -111,5 +95,4 @@ class RoutineListViewModel @Inject constructor(
             }
         }
     }
-
 }

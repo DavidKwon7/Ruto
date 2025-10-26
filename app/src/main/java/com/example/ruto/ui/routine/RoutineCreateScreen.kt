@@ -1,5 +1,7 @@
 package com.example.ruto.ui.routine
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -7,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +38,7 @@ import com.example.ruto.domain.routine.RoutineTag
 import java.time.LocalDate
 import java.time.LocalTime
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineCreateScreen(
@@ -44,11 +49,16 @@ fun RoutineCreateScreen(
     val ui by vm.ui.collectAsState()
 
     LaunchedEffect(ui.savedId) {
-        ui.savedId?.let { onSaved(it) }
+        ui.savedId?.let {
+            onSaved(it)
+            navController.popBackStack()
+        }
     }
 
     Scaffold(topBar = { TopAppBar(title = { Text("루틴 등록") }) }) { pad ->
-        Column(Modifier.padding(pad).padding(16.dp)) {
+        Column(Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(pad).padding(16.dp)) {
             OutlinedTextField(
                 value = ui.name,
                 onValueChange = vm::updateName,

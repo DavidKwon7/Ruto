@@ -48,10 +48,6 @@ fun RoutineListScreen(
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
 
-    /*LaunchedEffect(ui.items) {
-        vm.refresh()
-    }*/
-
     Scaffold(
         topBar = {
             TopAppBar(

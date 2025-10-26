@@ -70,32 +70,30 @@ fun StatisticsScreen(
                         .padding(pad),
                     contentPadding = PaddingValues(16.dp)
                 ) {
-                    // 1) Heatmap를 리스트 헤더로
                     item(key = "heatmap") {
                         HeatmapGrid(
                             heatmap = ui.heatmap,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 140.dp, max = 240.dp) // 중요: 전체 높이 점유 금지
+                                .heightIn(min = 140.dp, max = 240.dp)
                         )
                         Spacer(Modifier.height(12.dp))
                         Divider()
                         Spacer(Modifier.height(8.dp))
                     }
 
-                    // 2) 루틴 행들
                     items(
                         items = ui.routineDays,
-                        key = { it.routineId } // 성능/상태 보존
+                        key = { it.routineId }
                     ) { rd ->
                         RoutineRowItem(
                             title = rd.name.ifBlank { "제목 없음" },
-                            monthDays = ui.heatmap.size, // 월 일수(heatmap 크기와 동일 가정)
+                            monthDays = ui.heatmap.size,
                             days = rd.days
                         )
                     }
 
-                    item { Spacer(Modifier.height(24.dp)) } // 바닥 여백
+                    item { Spacer(Modifier.height(24.dp)) }
                 }
             }
         }
@@ -164,7 +162,7 @@ private fun RoutineRowItem(
         Text(title, style = MaterialTheme.typography.titleSmall)
         Spacer(Modifier.height(6.dp))
 
-        // 일자 칸이 화면보다 길 수 있으니 가로 스크롤 허용(옵션)
+        // 일자 칸이 화면보다 길 수 있으니 가로 스크롤
         Row(
             modifier = Modifier
                 .fillMaxWidth()

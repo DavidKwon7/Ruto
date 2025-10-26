@@ -69,9 +69,6 @@ class AuthViewModel @Inject constructor(
                             }
                             .onSuccess {
                                 // 로그인 성공 직후 FCM 토큰 재등록
-                                // runCatching { reRegisterFcm(fcmApi) }
-
-                                // 로그인 성공 직후: 유저 자격으로 FCM 재등록(게스트 토큰 승격)
                                 viewModelScope.launch { pushHandler.onLoginOrBootstrap() }
                             }
                     }
