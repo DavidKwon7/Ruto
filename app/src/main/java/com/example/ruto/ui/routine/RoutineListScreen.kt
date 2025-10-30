@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -102,9 +103,9 @@ private fun RoutineList(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
                     // .clickable { onClick(r) }
-                    .bounceClick {
-                        onToggleComplete(item)
-                    }
+                    .bounceClick (
+                        onClick = { onToggleComplete(item) }
+                    )
             ) {
                 Row(
                     Modifier
@@ -112,7 +113,11 @@ private fun RoutineList(
                         .padding(12.dp)
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(r.name, style = MaterialTheme.typography.titleMedium)
+                        Row {
+                            Text(r.name, style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.padding(horizontal = 2.dp))
+                            if (completed) Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = "루틴 완료")
+                        }
                         Spacer(Modifier.height(4.dp))
                         Text("${r.cadence} | ${r.startDate} ~ ${r.endDate}")
                         if (r.notifyEnabled) {

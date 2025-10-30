@@ -12,7 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 
 /**
  * 클릭 시, 발생하는 애니메이션 이펙트를 구현한 파일
@@ -20,10 +22,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 enum class ButtonState { Pressed, Idle }
 
 fun Modifier.bounceClick(
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    hapticOnPress: HapticFeedbackType = HapticFeedbackType.Confirm, // 진동 타입 설정
+    hapticOnRelease: HapticFeedbackType? = null // 해제 시도 원하면 지정
 ) = composed {
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
-    val scale by animateFloatAsState(if (buttonState == ButtonState.Pressed) 0.70f else 1f)
+    val scale by animateFloatAsState(
+        targetValue = if (buttonState == ButtonState.Pressed) 0.70f else 1f,
+        label = "bounce-scale"
+    )
+    val haptics = LocalHapticFeedback.current
 
     this
         .graphicsLayer {
@@ -37,13 +45,20 @@ fun Modifier.bounceClick(
         )
         .pointerInput(buttonState) {
             awaitPointerEventScope {
-                buttonState = if (buttonState == ButtonState.Pressed) {
+                if (buttonState == ButtonState.Pressed) {
+                    // 손가락 떼는 순간(업) 처리
                     waitForUpOrCancellation()
-                    ButtonState.Idle
+                    if (hapticOnRelease != null) {
+                        haptics.performHapticFeedback(hapticOnRelease)
+                    }
+                    buttonState = ButtonState.Idle
                 } else {
-                    awaitFirstDown(false)
-                    ButtonState.Pressed
+                    // 손가락 누른 순간(다운) 처리
+                    awaitFirstDown(requireUnconsumed = false)
+                    haptics.performHapticFeedback(hapticOnPress)
+                    buttonState = ButtonState.Pressed
                 }
             }
         }
+
 }
