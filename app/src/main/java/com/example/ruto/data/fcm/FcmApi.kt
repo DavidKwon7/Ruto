@@ -3,6 +3,7 @@ package com.example.ruto.data.fcm
 import com.example.ruto.BuildConfig
 import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.fcm.RegisterFcmModels
+import com.example.ruto.domain.fcm.SetFCMEnabledModels
 import com.example.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
 import io.ktor.client.HttpClient
@@ -38,6 +39,22 @@ class FcmApi @Inject constructor(
         }
         if (!resp.status.isSuccess()) {
             throw IllegalStateException("register-fcm failed: ${resp.status} ${resp.bodyAsText()}")
+        }
+        return resp.body()
+    }
+
+    suspend fun setPushEnabled(
+        token: String,
+        enabled: Boolean,
+        anonKey: String = BuildConfig.SUPABASE_KEY
+    ): SetFCMEnabledModels.Response {
+        val resp = client.post("$base/functions/v1/set-push-enabled") {
+            header("apikey", anonKey)
+            applyAuthHeaders(supabase, secure)
+            setBody(SetFCMEnabledModels.Request(token = token, enabled = enabled))
+        }
+        if (!resp.status.isSuccess()) {
+            throw IllegalStateException("set-push-enabled failed: ${resp.status} ${resp.bodyAsText()}")
         }
         return resp.body()
     }

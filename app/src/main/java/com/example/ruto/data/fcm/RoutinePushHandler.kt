@@ -9,6 +9,7 @@ import com.example.ruto.data.security.SecureStore
 import com.example.ruto.domain.fcm.RegisterFcmModels
 import com.example.ruto.util.AppLogger
 import com.google.firebase.installations.FirebaseInstallations
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
@@ -37,6 +39,7 @@ class RoutinePushHandler @Inject constructor(
 ) {
     private val KEY_FCM_TOKEN = "fcm_token"                 // 마지막 업로드 성공 토큰
     private val KEY_FCM_TOKEN_PENDING = "fcm_token_pending" // 아직 서버 반영 전 토큰(앱 재시작 복구용)
+    private val KEY_PUSH_ENABLED = "push_enabled"
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -75,6 +78,10 @@ class RoutinePushHandler @Inject constructor(
         null
     }
 
+    fun getEnabledLocal(): Boolean = secure.getBoolean(KEY_PUSH_ENABLED, true)
+    fun setEnabledLocal(enabled: Boolean) = secure.putBoolean(KEY_PUSH_ENABLED, enabled)
+
+
     /**
      * FCM SDK로부터 새 토큰을 받았을 때 호출
      */
@@ -99,14 +106,26 @@ class RoutinePushHandler @Inject constructor(
         }
     }
 
+    private suspend fun currentOrFetchToken(): String {
+        secure.getString(KEY_FCM_TOKEN)?.let { if (it.isNotBlank()) return it }
+        secure.getString(KEY_FCM_TOKEN_PENDING)?.let { if (it.isNotBlank()) return it }
+        // FCM에서 즉시 토큰 받기
+        val fresh = FirebaseMessaging.getInstance().token.await()
+        secure.putString(KEY_FCM_TOKEN, fresh)
+        return fresh
+    }
+
     private suspend fun syncToServer(token: String) {
         val appVersion = readAppVersionOrNull()
+        val enabled = getEnabledLocal()
 
         val req = RegisterFcmModels.RegisterFcmRequest(
             token = token,
             platform = "android",
             appVersion = appVersion,
-            locale = Locale.getDefault().toLanguageTag()
+            locale = Locale.getDefault().toLanguageTag(),
+            deviceId = readAndroidId(),
+            installationId = readInstallationsId()
         )
 
         var attempt = 0
@@ -118,6 +137,7 @@ class RoutinePushHandler @Inject constructor(
             try {
                 // 헤더(Authorization or X-Guest-Id)는 FcmApi 내부에서 자동 적용
                 api.registerFcmToken(req = req,)
+                api.setPushEnabled(token, enabled)
                 // 성공: 확정 저장, pending 제거
                 secure.putString(KEY_FCM_TOKEN, token)
                 secure.clear(KEY_FCM_TOKEN_PENDING)
@@ -167,10 +187,35 @@ class RoutinePushHandler @Inject constructor(
 
         runCatching {
             api.registerFcmToken(req) // 현재는 Authorization 없으니 X-Guest-Id 헤더로 저장됨
+            api.setPushEnabled(token, getEnabledLocal())
         }.onSuccess {
             logger.d("PushHandler", "logout degrade success")
         }.onFailure {
             logger.e("PushHandler", "logout degrade failed", it)
+        }
+    }
+
+    /**
+     * 스위치 토글 진입점: 권한 OK일 때 호출
+     */
+    suspend fun togglePushEnabled(enabled: Boolean) {
+        // 낙관적 로컬 저장
+        setEnabledLocal(enabled)
+        // 서버 반영
+        val token = currentOrFetchToken()
+        api.setPushEnabled(token, enabled)
+        // (선택) register-fcm 재호출로 메타 재정합
+        runCatching {
+            api.registerFcmToken(
+                RegisterFcmModels.RegisterFcmRequest(
+                    token = token,
+                    platform = "android",
+                    appVersion = readAppVersionOrNull(),
+                    locale = Locale.getDefault().toLanguageTag(),
+                    deviceId = readAndroidId(),
+                    installationId = readInstallationsId()
+                )
+            )
         }
     }
 }

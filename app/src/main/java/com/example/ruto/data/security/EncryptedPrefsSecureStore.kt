@@ -33,6 +33,16 @@ class EncryptedPrefsSecureStore @Inject constructor(
 
     override fun getString(key: String): String? = prefs.getString(key, null)
 
+    override fun putBoolean(key: String, value: Boolean?) {
+        prefs.edit().apply {
+            if (value == null) remove(key) else putBoolean(key, value)
+        }.apply()
+    }
+
+    override fun getBoolean(key: String, default: Boolean): Boolean =
+        prefs.getBoolean(key, default)
+
+
     override fun clear(key: String) = prefs.edit().remove(key).apply()
 
     override fun clearAll() = prefs.edit().clear().apply()
