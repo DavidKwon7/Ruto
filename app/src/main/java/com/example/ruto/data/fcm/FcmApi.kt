@@ -20,7 +20,6 @@ class FcmApi @Inject constructor(
     private val secure: SecureStore
 ) {
     private val base = BuildConfig.SUPABASE_URL
-    private val functionsBase = "https://wyqbynrmzndxuiahhdxg.functions.supabase.co"
 
     /**
      * Edge Function: /register-fcm
@@ -32,7 +31,6 @@ class FcmApi @Inject constructor(
         req: RegisterFcmModels.RegisterFcmRequest,
         anonKey: String = BuildConfig.SUPABASE_KEY
     ): RegisterFcmModels.RegisterFcmResponse {
-        // return client.post("$functionsBase/register-fcm") {
         val resp =  client.post("$base/functions/v1/register-fcm") {
             header("apikey", anonKey)
             applyAuthHeaders(supabase, secure)   // 공통 규칙 적용
