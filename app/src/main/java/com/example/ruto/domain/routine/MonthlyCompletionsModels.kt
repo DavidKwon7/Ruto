@@ -2,6 +2,7 @@ package com.example.ruto.domain.routine
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
+import kotlin.math.roundToInt
 
 
 @Serializable
@@ -24,7 +25,11 @@ data class HeatmapDay(
     val count: Int,            // 완료 루틴 수(분자)
     val total: Int,            // 그날 대상 루틴 전체(분모)
     val percent: Int           // 0..100
-)
+) {
+    val safeCount: Int get() = count.coerceAtMost(total.coerceAtLeast(0))
+    val safePercent: Int get() =
+        if (total > 0) ((safeCount * 100.0) / total).roundToInt().coerceIn(0, 100) else 0
+}
 
 @Serializable
 data class RoutineDays(

@@ -128,7 +128,7 @@ private fun HeatmapGrid(
 
 @Composable
 private fun DayBox(day: HeatmapDay) {
-    val fill = colorForPercent(day.percent)
+    val fill = colorForPercent(day.safePercent)
     Column(
         modifier = Modifier
             .size(40.dp)
@@ -143,7 +143,7 @@ private fun DayBox(day: HeatmapDay) {
         )
         Spacer(Modifier.height(2.dp))
         Text(
-            text = "${day.percent}%",
+            text = "${day.safePercent}%",
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
