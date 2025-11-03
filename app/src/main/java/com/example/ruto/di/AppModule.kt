@@ -1,13 +1,18 @@
 package com.example.ruto.di
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.ruto.BuildConfig
 import com.example.ruto.auth.AuthProvider
 import com.example.ruto.auth.GoogleAuthProvider
 import com.example.ruto.auth.GuestAuthProvider
 import com.example.ruto.auth.KakaoAuthProvider
+import com.example.ruto.data.local.RoutineCompletionDao
+import com.example.ruto.data.local.routine.RoutineDao
 import com.example.ruto.data.security.EncryptedPrefsSecureStore
 import com.example.ruto.data.security.SecureStore
+import com.example.ruto.data.statistics.LiveMonthlyStatsCalculator
 import com.example.ruto.util.AppLogger
 import com.example.ruto.util.LogcatLogger
 import dagger.Module
@@ -70,6 +75,19 @@ object AppModule {
             GuestAuthProvider()
         )
 
-
+    /**
+     * LiveMonthlyStatsCalculator는 @Inject 생성자이므로 별도 @Provides 없이도 주입 가능하지만,
+     * 의존성 명시와 테스트 대체 용이성을 위해 명시 제공.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    @Provides
+    @Singleton
+    fun provideLiveMonthlyStatsCalculator(
+        routineDao: RoutineDao,
+        completionDao: RoutineCompletionDao,
+        supabase: SupabaseClient,
+        secure: SecureStore
+    ): LiveMonthlyStatsCalculator =
+        LiveMonthlyStatsCalculator(routineDao, completionDao, supabase, secure)
 
 }

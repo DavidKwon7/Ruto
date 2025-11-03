@@ -2,10 +2,10 @@ package com.example.ruto.data.routine
 
 import com.example.ruto.BuildConfig
 import com.example.ruto.data.security.SecureStore
+import com.example.ruto.data.statistics.model.StatisticsCompletionsResponse
 import com.example.ruto.domain.routine.CompleteBatchRequest
 import com.example.ruto.domain.routine.CompleteBatchResponse
 import com.example.ruto.domain.routine.CompleteItem
-import com.example.ruto.domain.routine.StatisticsCompletionsResponse
 import com.example.ruto.domain.routine.RoutineCreateRequest
 import com.example.ruto.domain.routine.RoutineCreateResponse
 import com.example.ruto.domain.routine.RoutineDeleteRequest
@@ -120,7 +120,7 @@ class RoutineApi @Inject constructor(
         val resp = client.get(url) {
             header("apikey", BuildConfig.SUPABASE_KEY)
             header(HttpHeaders.Accept, "application/json")
-            applyAuthHeaders(supabase, secure)  // ✅ 로그인/게스트 헤더 공통 적용
+            applyAuthHeaders(supabase, secure)
         }
         if (!resp.status.isSuccess()) {
             throw IllegalStateException("monthly fetch failed: ${resp.status} ${resp.body<String>()}")

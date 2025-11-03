@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -33,16 +34,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.ruto.domain.routine.HeatmapDay
+import com.example.ruto.data.statistics.model.HeatmapDay
 import java.time.LocalDate
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -52,8 +56,12 @@ fun StatisticsScreen(
     vm: StatisticsViewModel = hiltViewModel(),
     month: String = LocalDate.now().toString().substring(0, 7) // "YYYY-MM"
 ) {
-    val ui by vm.ui.collectAsState()
-    LaunchedEffect(month) { vm.load(month = month) }
+    val ui by vm.ui.collectAsStateWithLifecycle()
+    val tz = remember { ZoneId.systemDefault().id }
+
+    LaunchedEffect(month, tz) {
+        vm.startObserving(month, tz)
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("월간 완료 현황 ($month)") }) }
@@ -107,19 +115,24 @@ private fun HeatmapGrid(
     modifier: Modifier = Modifier
 ) {
     val columns = 7
-    val rows = (heatmap.size + columns - 1) / columns
+    val rows = if (heatmap.isEmpty()) 0 else (heatmap.size + columns - 1) / columns
+    val cell = 40.dp
+    val gap = 8.dp
+    val gridHeight = if (rows <= 0) 140.dp else rows * cell + (maxOf(rows - 1, 0)) * gap
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
-        modifier = modifier, // <-- fillMaxSize() 없앰
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        userScrollEnabled = true
+        modifier = modifier
+            .fillMaxWidth()
+            .requiredHeight(gridHeight),
+        verticalArrangement = Arrangement.spacedBy(gap),
+        horizontalArrangement = Arrangement.spacedBy(gap),
+        userScrollEnabled = false
     ) {
         items(heatmap.size) { idx ->
             DayBox(heatmap[idx])
         }
-        val remain = rows * columns - heatmap.size
+        val remain = maxOf(rows * columns - heatmap.size, 0)
         if (remain > 0) {
             items(remain) { Box(Modifier.size(40.dp)) }
         }

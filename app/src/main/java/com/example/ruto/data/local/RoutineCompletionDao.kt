@@ -17,6 +17,17 @@ interface RoutineCompletionDao {
 
     @Query("""
         SELECT * FROM routine_completions
+        WHERE ownerKey = :ownerKey
+          AND date BETWEEN :fromDate AND :toDate
+    """)
+    fun observeRange(
+        ownerKey: String,
+        fromDate: String, // "YYYY-MM-DD"
+        toDate: String    // "YYYY-MM-DD"
+    ): Flow<List<RoutineCompletionLocal>>
+
+    @Query("""
+        SELECT * FROM routine_completions
         WHERE ownerKey = :ownerKey AND date = :date AND routineId = :routineId
         LIMIT 1
     """)
