@@ -2,6 +2,7 @@ package com.example.ruto.ui.routine
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -35,8 +40,10 @@ import androidx.navigation.NavHostController
 import com.example.ruto.domain.routine.FixedTag
 import com.example.ruto.domain.routine.RoutineCadence
 import com.example.ruto.domain.routine.RoutineTag
+import com.example.ruto.ui.util.TimePickerDialogM3
+import com.example.ruto.ui.util.pad2
+import com.example.ruto.ui.util.parseHHmm
 import java.time.LocalDate
-import java.time.LocalTime
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,12 +111,44 @@ fun RoutineCreateScreen(
                 Switch(checked = ui.notifyEnabled, onCheckedChange = vm::toggleNotify)
             }
             if (ui.notifyEnabled) {
-                Spacer(Modifier.height(8.dp))
-                Text("알림 시간: ${ui.notifyTime ?: "--:--"}")
-                Row {
-                    Button(onClick = { vm.updateNotifyTime(LocalTime.of(9, 0)) }) { Text("오전 9시") }
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = { vm.updateNotifyTime(LocalTime.now().withSecond(0).withNano(0)) }) { Text("지금 시각") }
+                val (initHour, initMinute) = remember(ui.notifyTime) {
+                    parseHHmm(ui.notifyTime)
+                }
+                var showPicker by remember { mutableStateOf(false) }
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = ui.notifyTime.orEmpty(),
+                        onValueChange = {}, // 사용자가 직접 수정하지 않음
+                        readOnly = true,
+                        label = { Text("알림 시각(HH:mm)") },
+                        modifier = Modifier.weight(1f),
+                        trailingIcon = {
+                            IconButton(onClick = { showPicker = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "시간 선택"
+                                )
+                            }
+                        }
+                    )
+                    Button(onClick = { showPicker = true }) { Text("시간 선택") }
+                }
+
+                if (showPicker) {
+                    TimePickerDialogM3(
+                        initialHour = initHour,
+                        initialMinute = initMinute,
+                        onDismiss = { showPicker = false },
+                        onConfirm = { h, m ->
+                            vm.updateNotifyTime("${pad2(h)}:${pad2(m)}")
+                            showPicker = false
+                        }
+                    )
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -168,5 +207,4 @@ fun RoutineCreateScreen(
             }
         }
     }
-
 }

@@ -1,5 +1,7 @@
 package com.example.ruto.ui.routine
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ruto.data.routine.RoutineRepository
@@ -20,7 +22,7 @@ data class RoutineFormState(
     val startDate: LocalDate = LocalDate.now(),
     val endDate: LocalDate = LocalDate.now().plusMonths(1),
     val notifyEnabled: Boolean = false,
-    val notifyTime: LocalTime? = null,
+    val notifyTime: String? = null,
     val tags: List<RoutineTag> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,
@@ -40,9 +42,10 @@ class RoutineCreateViewModel @Inject constructor(
     fun updateStartDate(v: LocalDate) = _ui.update { it.copy(startDate = v) }
     fun updateEndDate(v: LocalDate) = _ui.update { it.copy(endDate = v) }
     fun toggleNotify(on: Boolean) = _ui.update { it.copy(notifyEnabled = on, notifyTime = if (on) it.notifyTime else null) }
-    fun updateNotifyTime(t: LocalTime) = _ui.update { it.copy(notifyTime = t) }
+    fun updateNotifyTime(t: String) = _ui.update { it.copy(notifyTime = t) }
     fun updateTags(newTags: List<RoutineTag>) = _ui.update { it.copy(tags = newTags) }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun submit() {
         val s = _ui.value
         viewModelScope.launch {

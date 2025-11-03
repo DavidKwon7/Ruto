@@ -71,7 +71,7 @@ class RoutineRepository @Inject constructor(
         startDate: LocalDate,
         endDate: LocalDate,
         notifyEnabled: Boolean,
-        notifyTime: LocalTime?,
+        notifyTime: String?,
         tags: List<RoutineTag>
     ): Result<RoutineCreateResponse> = runCatching {
         require(name.isNotBlank()) { "루틴 명칭을 입력하세요." }
@@ -86,7 +86,7 @@ class RoutineRepository @Inject constructor(
             startDate = startDate.format(dateFmt),
             endDate = endDate.format(dateFmt),
             notifyEnabled = notifyEnabled,
-            notifyTime = notifyTime?.format(timeFmt),
+            notifyTime = notifyTime,
             timezone = TimeZone.getDefault().id,       // ex) Asia/Seoul
             tags = tagStrings,
         )
