@@ -20,7 +20,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -78,7 +81,11 @@ fun RoutineEditScreen(
     ) { pad ->
         Box(Modifier.fillMaxSize().padding(pad)) {
             if (ui.loading) {
-                CircularProgressIndicator(Modifier.padding(24.dp))
+                CircularProgressIndicator(
+                    Modifier
+                    .padding(24.dp)
+                    .align(Alignment.Center)
+                )
             } else {
                 Column(Modifier
                     .verticalScroll(rememberScrollState())
@@ -91,8 +98,25 @@ fun RoutineEditScreen(
                     )
                     Spacer(Modifier.height(12.dp))
 
-                    // 간단한 Cadence 선택 (실서비스에선 Dropdown 등 권장)
-                    CadenceRow(ui.cadence) { vm.updateCadence(it) }
+                    // 간단한 Cadence 선택 Dropdown
+                    var expanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                        OutlinedTextField(
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            value = ui.cadence.name,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("주기") }
+                        )
+                        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            RoutineCadence.entries.forEach { c ->
+                                DropdownMenuItem(
+                                    text = { Text(c.name) },
+                                    onClick = { vm.updateCadence(c); expanded = false }
+                                )
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(12.dp))
 
                     var showStartPicker by remember { mutableStateOf(false) }
@@ -202,8 +226,8 @@ fun RoutineEditScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // 태그 간단 편집(콤마 구분)
-                    var tagsText by remember(ui.tags) { mutableStateOf(ui.tags.joinToString(", ")) }
+                    // TODO 태그 기능 구현하기
+                    /*var tagsText by remember(ui.tags) { mutableStateOf(ui.tags.joinToString(", ")) }
                     OutlinedTextField(
                         value = tagsText,
                         onValueChange = {
@@ -212,7 +236,7 @@ fun RoutineEditScreen(
                         },
                         label = { Text("태그(콤마로 구분)") },
                         modifier = Modifier.fillMaxWidth()
-                    )
+                    )*/
 
                     if (ui.error != null) {
                         Spacer(Modifier.height(8.dp))
@@ -232,19 +256,6 @@ fun RoutineEditScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun CadenceRow(selected: RoutineCadence, onSelect: (RoutineCadence) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        RoutineCadence.values().forEach { c ->
-            FilterChip(
-                selected = (c == selected),
-                onClick = { onSelect(c) },
-                label = { Text(c.name) }
-            )
         }
     }
 }

@@ -2,6 +2,9 @@ package com.example.ruto.util
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * 문자열 "YYYY-MM-DD" ↔ EpochMillis 변환
@@ -15,6 +18,12 @@ fun parseYYYYMMDD(value: String?): java.time.LocalDate? = try {
 @RequiresApi(Build.VERSION_CODES.O)
 fun java.time.LocalDate.toEpochMillis(zoneId: java.time.ZoneId = java.time.ZoneId.systemDefault()): Long =
     this.atStartOfDay(zoneId).toInstant().toEpochMilli()
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun millisToLocalDate(
+    millis: Long,
+    zoneId: ZoneId = ZoneId.systemDefault() // 예: ZoneId.of("Asia/Seoul")
+): LocalDate = Instant.ofEpochMilli(millis).atZone(zoneId).toLocalDate()
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun epochMillisToYYYYMMDD(millis: Long, zoneId: java.time.ZoneId = java.time.ZoneId.systemDefault()): String =

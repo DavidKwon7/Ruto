@@ -16,6 +16,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 
+@RequiresApi(Build.VERSION_CODES.O)
 data class RoutineFormState(
     val name: String = "",
     val cadence: RoutineCadence = RoutineCadence.DAILY,
@@ -29,7 +30,7 @@ data class RoutineFormState(
     val savedId: String? = null
 )
 
-
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class RoutineCreateViewModel @Inject constructor(
     private val repo: RoutineRepository
