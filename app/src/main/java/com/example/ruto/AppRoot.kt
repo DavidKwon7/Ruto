@@ -17,8 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.ruto.domain.AuthState
-import com.example.ruto.screen.HomeScreen
-import com.example.ruto.screen.LoginScreen
+import com.example.ruto.ui.home.HomeScreen
+import com.example.ruto.ui.auth.LoginScreen
 import com.example.ruto.ui.auth.AuthViewModel
 import com.example.ruto.ui.permission.EnsureNotificationPermission
 

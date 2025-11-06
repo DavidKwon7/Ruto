@@ -1,4 +1,4 @@
-package com.example.ruto.screen
+package com.example.ruto.ui.home
 
 import android.os.Build
 import androidx.annotation.RequiresApi
