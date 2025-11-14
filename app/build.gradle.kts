@@ -15,7 +15,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ruto"
+    namespace = "com.handylab.ruto"
     compileSdk = 36
 
     val localProperties = Properties()
@@ -25,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.ruto"
+        applicationId = "com.handylab.ruto"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
