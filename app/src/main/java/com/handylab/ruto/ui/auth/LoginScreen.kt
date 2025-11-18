@@ -69,8 +69,9 @@ fun LoginScreen(
     ) { pad ->
         Box(
             Modifier
-            .fillMaxSize()
-            .padding(pad)) {
+                .fillMaxSize()
+                .padding(pad)
+        ) {
             Column(
                 Modifier
                     .fillMaxWidth()
@@ -101,9 +102,11 @@ fun LoginScreen(
                 }
             }
             if (ui.loading) {
-                Box(Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f)))
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                )
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
         }
@@ -125,6 +128,7 @@ private fun ProviderButton(
             border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
             icon = painterResource(id = R.drawable.img_google_login) // 벡터/PNG
         )
+
         "kakao" -> ProviderUi(
             label = "카카오로 시작하기",
             container = Color(0xFFFEE500),
@@ -132,6 +136,7 @@ private fun ProviderButton(
             border = null,
             icon = painterResource(id = R.drawable.img_kakao_login)
         )
+
         else -> ProviderUi(
             label = "Sign in with $name",
             container = MaterialTheme.colorScheme.primary,
@@ -167,8 +172,9 @@ private fun ProviderButton(
                     contentDescription = null,
                     tint = Color.Unspecified // 원본 컬러 유지
                 )
+            } else {
+                Text(text = label, style = MaterialTheme.typography.titleSmall)
             }
-            Text(text = label, style = MaterialTheme.typography.titleSmall)
         }
     }
 }
