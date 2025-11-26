@@ -34,7 +34,9 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.handylab.ruto.BuildConfig
 import com.handylab.ruto.ui.auth.AuthViewModel
+import com.handylab.ruto.util.getVersionName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,7 +112,7 @@ fun SettingScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(fontWeight = FontWeight.Bold, text = "앱 버전")
-                    Text("v0.0.0")
+                    Text("v ${getVersionName()}")
                 }
             }
             Spacer(Modifier.padding(vertical = 12.dp))

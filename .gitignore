@@ -21,3 +21,4 @@ local.properties
 *.apks
 *.ipa
 *.obb
+/upload_certificate.pem
