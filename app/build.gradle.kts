@@ -173,4 +173,6 @@ dependencies {
     // Room
     implementation(libs.bundles.androidx.room)
     ksp(libs.androidx.room.compiler)
+
+    implementation(libs.androidx.datastore.preferences)
 }

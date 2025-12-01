@@ -4,9 +4,12 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.data.fcm.RoutinePushHandler
+import com.handylab.ruto.data.setting.SettingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,7 +23,8 @@ data class PushUiState(
 
 @HiltViewModel
 class SettingViewModel @Inject constructor(
-    private val handler: RoutinePushHandler
+    private val handler: RoutinePushHandler,
+    private val settingRepository: SettingRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         PushUiState(
@@ -31,6 +35,13 @@ class SettingViewModel @Inject constructor(
         )
     )
     val uiState: StateFlow<PushUiState> = _uiState
+
+    val themeMode: StateFlow<ThemeMode> = settingRepository.themeMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ThemeMode.SYSTEM
+        )
 
     fun onToggleRequest(wantEnabled: Boolean, permissionGranted: Boolean) {
         if (wantEnabled && Build.VERSION.SDK_INT >= 33 && !permissionGranted) {
@@ -48,6 +59,12 @@ class SettingViewModel @Inject constructor(
                 .onSuccess {
                     _uiState.update { it.copy(loading = false) }
                 }
+        }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch {
+            settingRepository.setThemeMode(mode)
         }
     }
 
