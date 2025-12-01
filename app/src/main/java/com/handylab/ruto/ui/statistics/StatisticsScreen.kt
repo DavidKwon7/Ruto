@@ -26,9 +26,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -86,7 +89,11 @@ fun StatisticsScreen(
                                 .heightIn(min = 140.dp, max = 240.dp)
                         )
                         Spacer(Modifier.height(12.dp))
-                        Divider()
+                        HorizontalDivider(
+                            Modifier,
+                            DividerDefaults.Thickness,
+                            color = colorScheme.outlineVariant
+                        )
                         Spacer(Modifier.height(8.dp))
                     }
 
@@ -108,7 +115,6 @@ fun StatisticsScreen(
     }
 }
 
-// Heatmap: LazyVerticalGrid에서 fillMaxSize() 제거 & 높이 한정
 @Composable
 private fun HeatmapGrid(
     heatmap: List<HeatmapDay>,
@@ -141,7 +147,8 @@ private fun HeatmapGrid(
 
 @Composable
 private fun DayBox(day: HeatmapDay) {
-    val fill = colorForPercent(day.safePercent)
+    val colorScheme = colorScheme
+    val fill = colorForPercent(day.safePercent, colorScheme)
     Column(
         modifier = Modifier
             .size(40.dp)
@@ -152,6 +159,7 @@ private fun DayBox(day: HeatmapDay) {
             text = day.date.takeLast(2),
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
+            color = colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(2.dp))
@@ -159,6 +167,7 @@ private fun DayBox(day: HeatmapDay) {
             text = "${day.safePercent}%",
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
+            color = colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -171,7 +180,7 @@ private fun RoutineRowItem(
     days: List<Int>
 ) {
     Column(Modifier.fillMaxWidth()) {
-        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(title, style = MaterialTheme.typography.titleSmall, color = colorScheme.onSurface)
         Spacer(Modifier.height(6.dp))
 
         // 일자 칸이 화면보다 길 수 있으니 가로 스크롤
@@ -186,22 +195,36 @@ private fun RoutineRowItem(
                     Modifier
                         .size(12.dp)
                         .background(
-                            if (v == 1) Color(0xFF2ECC71) else Color(0xFFEAECEE),
+                            if (v == 1) colorScheme.primaryContainer else colorScheme.surfaceVariant,
                             shape = CircleShape
                         )
                 )
             }
         }
         Spacer(Modifier.height(12.dp))
-        Divider()
+        HorizontalDivider(
+            Modifier,
+            DividerDefaults.Thickness,
+            color = colorScheme.outlineVariant
+        )
         Spacer(Modifier.height(8.dp))
     }
 }
 
-private fun colorForPercent(p: Int): Color = when {
-    p >= 80 -> Color(0xFF2ECC71)
-    p >= 50 -> Color(0xFF7DCEA0)
-    p >= 20 -> Color(0xFFA9DFBF)
-    p > 0   -> Color(0xFFD5F5E3)
-    else    -> Color(0xFFEAECEE)
+private fun colorForPercent(p: Int, colorScheme: ColorScheme): Color {
+    val primaryContainer = colorScheme.primaryContainer
+    val variants = listOf(
+        primaryContainer.copy(alpha = 0.35f),
+        primaryContainer.copy(alpha = 0.55f),
+        primaryContainer.copy(alpha = 0.75f),
+        primaryContainer
+    )
+
+    return when {
+        p >= 80 -> variants[3]
+        p >= 50 -> variants[2]
+        p >= 20 -> variants[1]
+        p > 0 -> variants[0]
+        else -> colorScheme.surfaceVariant
+    }
 }
