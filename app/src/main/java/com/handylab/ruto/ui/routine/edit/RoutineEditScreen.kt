@@ -58,7 +58,7 @@ fun RoutineEditScreen(
     navController: NavHostController,
     vm: RoutineEditViewModel = hiltViewModel()
 ) {
-    val ui by vm.ui.collectAsState()
+    val ui by vm.uiState.collectAsState()
 
     // 저장 성공 시 뒤로
     LaunchedEffect(ui.saved) {

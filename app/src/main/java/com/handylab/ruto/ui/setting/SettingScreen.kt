@@ -186,14 +186,14 @@ private fun ThemeSettingSection(
         ) {
             Text(fontWeight = FontWeight.Bold, text = "테마")
             Text("앱 화면의 밝기 모드를 설정합니다.")
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = themeMode == ThemeMode.SYSTEM,
                     onClick = { onThemeChange(ThemeMode.SYSTEM) }
                 )
-                Text(text = "시스템 설정 따르기")
+                Text(text = "시스템 설정")
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -201,7 +201,7 @@ private fun ThemeSettingSection(
                     selected = themeMode == ThemeMode.LIGHT,
                     onClick = { onThemeChange(ThemeMode.LIGHT) }
                 )
-                Text(text = "항상 라이트 모드")
+                Text(text = "라이트 모드")
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -209,7 +209,7 @@ private fun ThemeSettingSection(
                     selected = themeMode == ThemeMode.DARK,
                     onClick = { onThemeChange(ThemeMode.DARK) }
                 )
-                Text(text = "항상 다크 모드")
+                Text(text = "다크 모드")
             }
         }
     }

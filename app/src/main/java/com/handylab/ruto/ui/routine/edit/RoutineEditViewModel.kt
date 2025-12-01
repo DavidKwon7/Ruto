@@ -42,17 +42,17 @@ class RoutineEditViewModel @Inject constructor(
 ) : ViewModel() {
     private val routineId: String = checkNotNull(savedState["id"])
 
-    private val _ui = MutableStateFlow(RoutineEditUiState())
-    val ui: StateFlow<RoutineEditUiState> = _ui.asStateFlow()
+    private val _uiState = MutableStateFlow(RoutineEditUiState())
+    val uiState: StateFlow<RoutineEditUiState> = _uiState.asStateFlow()
 
     init { load() }
 
     private fun load() {
         viewModelScope.launch {
-            _ui.update { it.copy(loading = true, error = null) }
+            _uiState.update { it.copy(loading = true, error = null) }
             repository.getRoutine(routineId)
                 .onSuccess { r ->
-                    _ui.update {
+                    _uiState.update {
                         it.copy(
                             loading = false,
                             routine = r,
@@ -68,23 +68,23 @@ class RoutineEditViewModel @Inject constructor(
                     }
                 }
                 .onFailure { e ->
-                    _ui.update { it.copy(loading = false, error = e.message) }
+                    _uiState.update { it.copy(loading = false, error = e.message) }
                 }
         }
     }
 
-    fun updateName(v: String) = _ui.update { it.copy(name = v) }
-    fun updateCadence(v: RoutineCadence) = _ui.update { it.copy(cadence = v) }
-    fun updateStartDate(v: String) = _ui.update { it.copy(startDate = v) }
-    fun updateEndDate(v: String) = _ui.update { it.copy(endDate = v) }
-    fun updateNotifyEnabled(v: Boolean) = _ui.update { it.copy(notifyEnabled = v) }
-    fun updateNotifyTime(v: String?) = _ui.update { it.copy(notifyTime = v) }
-    fun updateTags(v: List<String>) = _ui.update { it.copy(tags = v.distinct()) }
+    fun updateName(v: String) = _uiState.update { it.copy(name = v) }
+    fun updateCadence(v: RoutineCadence) = _uiState.update { it.copy(cadence = v) }
+    fun updateStartDate(v: String) = _uiState.update { it.copy(startDate = v) }
+    fun updateEndDate(v: String) = _uiState.update { it.copy(endDate = v) }
+    fun updateNotifyEnabled(v: Boolean) = _uiState.update { it.copy(notifyEnabled = v) }
+    fun updateNotifyTime(v: String?) = _uiState.update { it.copy(notifyTime = v) }
+    fun updateTags(v: List<String>) = _uiState.update { it.copy(tags = v.distinct()) }
 
     fun save() {
-        val s = _ui.value
+        val s = _uiState.value
         viewModelScope.launch {
-            _ui.update { it.copy(saving = true, error = null, saved = false) }
+            _uiState.update { it.copy(saving = true, error = null, saved = false) }
 
             val req = RoutineUpdateRequest(
                 id = routineId,
@@ -100,24 +100,24 @@ class RoutineEditViewModel @Inject constructor(
 
             repository.updateRoutine(req)
                 .onSuccess { ok ->
-                    _ui.update { it.copy(saving = false, saved = ok) }
+                    _uiState.update { it.copy(saving = false, saved = ok) }
                 }
                 .onFailure { e ->
-                    _ui.update { it.copy(saving = false, error = e.message) }
+                    _uiState.update { it.copy(saving = false, error = e.message) }
                 }
         }
     }
 
     fun delete(onDone: () -> Unit) {
         viewModelScope.launch {
-            _ui.update { it.copy(saving = true, error = null) }
+            _uiState.update { it.copy(saving = true, error = null) }
             repository.deleteRoutine(routineId)
                 .onSuccess { ok ->
-                    _ui.update { it.copy(saving = false) }
+                    _uiState.update { it.copy(saving = false) }
                     if (ok) onDone()
                 }
                 .onFailure { e ->
-                    _ui.update { it.copy(saving = false, error = e.message) }
+                    _uiState.update { it.copy(saving = false, error = e.message) }
                 }
         }
     }
