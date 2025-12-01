@@ -50,7 +50,7 @@ fun RoutineListScreen(
     vm: RoutineListViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
-    val ui by vm.ui.collectAsStateWithLifecycle()
+    val ui by vm.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {

@@ -1,6 +1,7 @@
 package com.handylab.ruto.ui.routine
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,16 +39,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.handylab.ruto.domain.routine.RoutineCadence
+import com.handylab.ruto.ui.event.UiEvent
 import com.handylab.ruto.ui.util.DatePickerDialogM3
 import com.handylab.ruto.ui.util.TimePickerDialogM3
 import com.handylab.ruto.ui.util.pad2
 import com.handylab.ruto.ui.util.parseHHmm
 import com.handylab.ruto.util.millisToLocalDate
 import com.handylab.ruto.util.toEpochMillis
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -57,18 +61,32 @@ fun RoutineCreateScreen(
     vm: RoutineCreateViewModel = hiltViewModel(),
     onSaved: (String) -> Unit = {}
 ) {
-    val ui by vm.ui.collectAsState()
+    val uiState by vm.uiState.collectAsState()
+    val context = LocalContext.current
 
-    LaunchedEffect(ui.savedId) {
-        ui.savedId?.let {
+    LaunchedEffect(uiState.savedId) {
+        uiState.savedId?.let {
             onSaved(it)
             navController.popBackStack()
         }
     }
 
+    LaunchedEffect(Unit) {
+        vm.uiEvent.collectLatest { e ->
+            if (e is UiEvent.ShowToastMsg)
+                Toast.makeText(
+                    context, e.message, Toast.LENGTH_SHORT
+                ).show()
+        }
+    }
+
     Scaffold(topBar = { TopAppBar(title = { Text("루틴 등록") }) }) { pad ->
-        Box(Modifier.fillMaxSize().padding(pad)) {
-            if (ui.loading) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(pad)
+        ) {
+            if (uiState.loading) {
                 CircularProgressIndicator(
                     Modifier
                         .padding(24.dp)
@@ -81,14 +99,13 @@ fun RoutineCreateScreen(
                         .padding(16.dp)
                 ) {
                     OutlinedTextField(
-                        value = ui.name,
+                        value = uiState.name,
                         onValueChange = vm::updateName,
                         label = { Text("루틴 명칭") },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(12.dp))
 
-                    // Cadence Dropdown
                     var expanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -97,7 +114,7 @@ fun RoutineCreateScreen(
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth(),
-                            value = ui.cadence.name,
+                            value = uiState.cadence.name,
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("주기") }
@@ -114,24 +131,18 @@ fun RoutineCreateScreen(
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    RoutineDateSelectPicker(ui = ui, vm = vm)
-                    /*Text("기간: ${ui.startDate} ~ ${ui.endDate}")
-                Row {
-                    Button(onClick = { vm.updateStartDate(LocalDate.now()) }) { Text("시작=오늘") }
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = { vm.updateEndDate(LocalDate.now().plusMonths(1)) }) { Text("끝=+1M") }
-                }*/
+                    RoutineDateSelectPicker(ui = uiState, vm = vm)
                     Spacer(Modifier.height(12.dp))
 
                     // 알림
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("알림 사용")
                         Spacer(Modifier.width(8.dp))
-                        Switch(checked = ui.notifyEnabled, onCheckedChange = vm::toggleNotify)
+                        Switch(checked = uiState.notifyEnabled, onCheckedChange = vm::toggleNotify)
                     }
-                    if (ui.notifyEnabled) {
-                        val (initHour, initMinute) = remember(ui.notifyTime) {
-                            parseHHmm(ui.notifyTime)
+                    if (uiState.notifyEnabled) {
+                        val (initHour, initMinute) = remember(uiState.notifyTime) {
+                            parseHHmm(uiState.notifyTime)
                         }
                         var showPicker by remember { mutableStateOf(false) }
 
@@ -141,7 +152,7 @@ fun RoutineCreateScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             OutlinedTextField(
-                                value = ui.notifyTime.orEmpty(),
+                                value = uiState.notifyTime.orEmpty(),
                                 onValueChange = {}, // 사용자가 직접 수정하지 않음
                                 readOnly = true,
                                 label = { Text("알림 시각(HH:mm)") },
@@ -215,12 +226,12 @@ fun RoutineCreateScreen(
                     Spacer(Modifier.height(20.dp))
 
                     Button(
-                        enabled = !ui.loading,
+                        enabled = !uiState.loading,
                         onClick = vm::submit,
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text(if (ui.loading) "저장 중..." else "저장") }
+                    ) { Text(if (uiState.loading) "저장 중..." else "저장") }
 
-                    ui.error?.let {
+                    uiState.error?.let {
                         Spacer(Modifier.height(8.dp))
                         Text(it, color = MaterialTheme.colorScheme.error)
                     }

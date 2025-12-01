@@ -108,7 +108,7 @@ fun StatisticsScreen(
     }
 }
 
-/** Heatmap: LazyVerticalGrid에서 fillMaxSize() 제거 & 높이 한정 */
+// Heatmap: LazyVerticalGrid에서 fillMaxSize() 제거 & 높이 한정
 @Composable
 private fun HeatmapGrid(
     heatmap: List<HeatmapDay>,
@@ -164,7 +164,6 @@ private fun DayBox(day: HeatmapDay) {
     }
 }
 
-/** 각 루틴 한 줄 */
 @Composable
 private fun RoutineRowItem(
     title: String,

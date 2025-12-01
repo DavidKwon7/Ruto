@@ -34,7 +34,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.handylab.ruto.BuildConfig
 import com.handylab.ruto.ui.auth.AuthViewModel
 import com.handylab.ruto.util.getVersionName
 
@@ -46,7 +45,7 @@ fun SettingScreen(
     settingViewModel: SettingViewModel = hiltViewModel(),
 ) {
     val authUi by authViewModel.uiState.collectAsStateWithLifecycle()
-    val settingUi by settingViewModel.ui.collectAsStateWithLifecycle()
+    val settingUi by settingViewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val grantedNow = remember {

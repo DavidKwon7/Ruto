@@ -22,7 +22,7 @@ data class PushUiState(
 class SettingViewModel @Inject constructor(
     private val handler: RoutinePushHandler
 ) : ViewModel() {
-    private val _ui = MutableStateFlow(
+    private val _uiState = MutableStateFlow(
         PushUiState(
             loading = false,
             enabled = handler.getEnabledLocal(),
@@ -30,23 +30,23 @@ class SettingViewModel @Inject constructor(
             needsPermission = false
         )
     )
-    val ui: StateFlow<PushUiState> = _ui
+    val uiState: StateFlow<PushUiState> = _uiState
 
     fun onToggleRequest(wantEnabled: Boolean, permissionGranted: Boolean) {
         if (wantEnabled && Build.VERSION.SDK_INT >= 33 && !permissionGranted) {
-            _ui.update { it.copy(needsPermission = true) }
+            _uiState.update { it.copy(needsPermission = true) }
             return
         }
+        _uiState.update { it.copy(loading = true, error = null, needsPermission = false, enabled = wantEnabled) }
 
-        _ui.update { it.copy(loading = true, error = null, needsPermission = false, enabled = wantEnabled) }
         viewModelScope.launch {
             runCatching { handler.togglePushEnabled(wantEnabled) }
                 .onFailure { e ->
                     handler.setEnabledLocal(!wantEnabled)
-                    _ui.update { it.copy(loading = false, enabled = !wantEnabled, error = e.message ?: "네트워크 오류") }
+                    _uiState.update { it.copy(loading = false, enabled = !wantEnabled, error = e.message ?: "네트워크 오류") }
                 }
                 .onSuccess {
-                    _ui.update { it.copy(loading = false) }
+                    _uiState.update { it.copy(loading = false) }
                 }
         }
     }
@@ -55,9 +55,7 @@ class SettingViewModel @Inject constructor(
         if (granted) {
             onToggleRequest(wantEnabled = true, permissionGranted = true)
         } else {
-            _ui.update { it.copy(needsPermission = false) }
+            _uiState.update { it.copy(needsPermission = false) }
         }
     }
-
-    fun clearError() { _ui.update { it.copy(error = null) } }
 }

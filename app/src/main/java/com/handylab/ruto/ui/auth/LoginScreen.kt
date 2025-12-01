@@ -51,12 +51,12 @@ fun LoginScreen(
     navController: NavHostController,
     vm: AuthViewModel = hiltViewModel()
 ) {
-    val ui by vm.uiState.collectAsStateWithLifecycle()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val activity = LocalContext.current as? Activity
 
-    LaunchedEffect(vm) {
-        vm.events.collectLatest { e ->
+    LaunchedEffect(Unit) {
+        vm.uiEvent.collectLatest { e ->
             if (e is UiEvent.ShowSnackbar) snackbar.showSnackbar(e.message)
         }
     }
@@ -85,23 +85,23 @@ fun LoginScreen(
                 providers.forEach { p ->
                     ProviderButton(
                         name = p.name,
-                        enabled = !ui.loading && activity != null,
+                        enabled = !uiState.loading && activity != null,
                         onClick = { activity?.let { vm.signIn(it, p) } },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(12.dp))
                 }
 
-                ui.error?.let {
+                uiState.error?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        it,
+                        "로그인 중 오류가 발생했습니다. 다시 시도해 주세요",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
-            if (ui.loading) {
+            if (uiState.loading) {
                 Box(
                     Modifier
                         .fillMaxSize()

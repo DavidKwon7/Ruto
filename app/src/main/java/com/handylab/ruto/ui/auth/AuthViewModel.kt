@@ -27,7 +27,6 @@ class AuthViewModel @Inject constructor(
     private val providers: List<@JvmSuppressWildcards AuthProvider>,
     private val logger: AppLogger,
     private val pushHandler: RoutinePushHandler,
-    //private val fcmApi: FcmApi,
 ) : ViewModel() {
     val authState: StateFlow<AuthState> = repo.authState
     val bootstrapDone: StateFlow<Boolean> = repo.bootstrapDone
@@ -35,12 +34,11 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
 
-    private val _events = MutableSharedFlow<UiEvent>()
-    val events: MutableSharedFlow<UiEvent> = _events
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent: MutableSharedFlow<UiEvent> = _uiEvent
 
     init {
         viewModelScope.launch {
-            // runCatching { reRegisterFcm(fcmApi) }
             bootstrapDone.filter { it }
                 .take(1)    // 최초 1회
                 .collect {
@@ -61,9 +59,7 @@ class AuthViewModel @Inject constructor(
                         val payload = provider.acquireIdToken(activity)
                         repo.signInWithIdToken(SocialProvider.Google, payload)
                             .onFailure { err ->
-                                val msg = err.message ?: "Sign-in failed"
-                                _uiState.update { s -> s.copy(error = msg) }
-                                _events.emit(UiEvent.ShowSnackbar(msg))
+                                showMessage(err.message ?: "Google sign-in failed")
                             }
                             .onSuccess {
                                 // 로그인 성공 직후 FCM 토큰 재등록
@@ -88,15 +84,12 @@ class AuthViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 logger.e("AuthVM", "signIn(${provider.name}) fail", e)
-                val msg = e.message ?: "Sign-in error"
-                _uiState.update { it.copy(error = msg) }
-                _events.emit(UiEvent.ShowSnackbar(msg))
+                showMessage(e.message ?: "signIn(${provider.name}) fail")
             } finally {
                 _uiState.update { it.copy(loading = false) }
             }
         }
     }
-
 
     fun signOut() {
         viewModelScope.launch {
@@ -112,6 +105,6 @@ class AuthViewModel @Inject constructor(
 
     private suspend fun showMessage(msg: String) {
         _uiState.update { it.copy(error = msg) }
-        _events.emit(UiEvent.ShowSnackbar(msg))
+        _uiEvent.emit(UiEvent.ShowSnackbar(msg))
     }
 }
