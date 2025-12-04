@@ -2,6 +2,7 @@ package com.handylab.ruto.ui.routine
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.data.routine.RoutineRepository
@@ -18,6 +19,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
+@Immutable
 data class RoutineFormState(
     val name: String = "",
     val cadence: RoutineCadence = RoutineCadence.DAILY,

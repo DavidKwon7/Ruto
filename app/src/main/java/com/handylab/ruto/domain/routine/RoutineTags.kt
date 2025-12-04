@@ -1,8 +1,10 @@
 package com.handylab.ruto.domain.routine
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 enum class FixedTag {
     @SerialName("health") HEALTH,
@@ -13,6 +15,7 @@ enum class FixedTag {
     @SerialName("other") OTHER
 }
 
+@Immutable
 @Serializable
 sealed class RoutineTag {
     @Serializable @SerialName("fixed")

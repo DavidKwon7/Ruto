@@ -15,6 +15,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,6 +34,7 @@ import com.handylab.ruto.ui.routine.edit.RoutineEditScreen
 import com.handylab.ruto.ui.setting.SettingScreen
 import com.handylab.ruto.ui.statistics.StatisticsScreen
 
+@Immutable
 data class BottomDest(val route: String, val label: String, val icon: ImageVector)
 
 @RequiresApi(Build.VERSION_CODES.O)

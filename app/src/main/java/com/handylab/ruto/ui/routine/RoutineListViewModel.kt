@@ -2,6 +2,7 @@ package com.handylab.ruto.ui.routine
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.data.routine.RoutineRepository
@@ -18,12 +19,14 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import javax.inject.Inject
 
+@Immutable
 data class RoutineListUiState(
     val loading: Boolean = false,
     val items: List<Item> = emptyList(),
     val error: String? = null
 )
 
+@Immutable
 data class Item(
     val routine: RoutineRead,
     val completedToday: Boolean

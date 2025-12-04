@@ -1,6 +1,7 @@
 package com.handylab.ruto.ui.setting
 
 import android.os.Build
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.data.fcm.RoutinePushHandler
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Immutable
 data class PushUiState(
     val loading: Boolean,
     val enabled: Boolean,

@@ -2,6 +2,7 @@ package com.handylab.ruto.ui.statistics
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.data.routine.RoutineMonthlyRepository
@@ -20,6 +21,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
+@Immutable
 data class MonthlyUiState(
     val loading: Boolean = false,
     val month: String = "",               // "YYYY-MM"

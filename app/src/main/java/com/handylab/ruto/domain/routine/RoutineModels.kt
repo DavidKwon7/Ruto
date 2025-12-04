@@ -1,10 +1,12 @@
 package com.handylab.ruto.domain.routine
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class RoutineCadence { DAILY, WEEKLY, MONTHLY, YEARLY }
 
+@Immutable
 @Serializable
 data class RoutineCreateRequest(
     val name: String,
@@ -17,6 +19,7 @@ data class RoutineCreateRequest(
     val tags: List<String>        // ["건강", "자기개발"]
 )
 
+@Immutable
 @Serializable
 data class RoutineCreateResponse(
     val id: String,
@@ -26,6 +29,7 @@ data class RoutineCreateResponse(
 /**
  * 루틴 목록/상세 공통으로 쓰는 읽기 모델
  */
+@Immutable
 @Serializable
 data class RoutineRead(
     val id: String,
@@ -49,6 +53,7 @@ data class RoutineListResponse(
  * - null 은 “수정 안 함”
  * - 서버는 snake_case를 받으므로 @SerialName 사용
  */
+@Immutable
 @Serializable
 data class RoutineUpdateRequest(
     val id: String,
@@ -62,11 +67,14 @@ data class RoutineUpdateRequest(
     val tags: List<String>? = null
 )
 
+@Immutable
 @Serializable
 data class RoutineUpdateResponse(val ok: Boolean)
 
+@Immutable
 @Serializable
 data class RoutineDeleteRequest(val id: String)
 
+@Immutable
 @Serializable
 data class RoutineDeleteResponse(val ok: Boolean)
