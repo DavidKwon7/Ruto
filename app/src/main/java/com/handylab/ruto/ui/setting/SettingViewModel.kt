@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -53,8 +54,16 @@ class SettingViewModel @Inject constructor(
     )
     val uiState: StateFlow<PushUiState> = _uiState
 
-    private val _profileUi = MutableStateFlow(ProfileUiState())
-    val profileUi: StateFlow<ProfileUiState> = _profileUi
+    private val _profileUi = MutableStateFlow(
+        ProfileUiState(
+            loading = true,
+            saving = false,
+            nickname = DEFAULT_NICKNAME,
+            avatarUrl = null,
+            error = null
+        )
+    )
+    val profileUi: StateFlow<ProfileUiState> = _profileUi.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>()
     val uiEvent: MutableSharedFlow<UiEvent> = _uiEvent
@@ -110,21 +119,21 @@ class SettingViewModel @Inject constructor(
             runCatching {
                 profileRepository.loadProfile()
             }.onSuccess { profile ->
-                _profileUi.update {
-                    it.copy(
+                _profileUi.value = ProfileUiState(
                         loading = false,
                         nickname = profile.nickname.ifBlank { DEFAULT_NICKNAME },
                         avatarUrl = profile.avatarUrl,
+                        saving = false,
                         error = null
                     )
-                }
             }.onFailure { e ->
-                _profileUi.update {
-                    it.copy(
-                        loading = false,
-                        error = e.message ?: "프로필을 불러오지 못했습니다."
-                    )
-                }
+                _profileUi.value = ProfileUiState(
+                    loading = false,
+                    nickname = DEFAULT_NICKNAME,
+                    avatarUrl = null,
+                    saving = false,
+                    error = e.message ?: "프로필을 불러오지 못했습니다."
+                )
                 _uiEvent.emit(UiEvent.ShowToastMsg(e.message ?: "프로필을 불러오지 못했습니다."))
             }
         }
@@ -132,61 +141,5 @@ class SettingViewModel @Inject constructor(
 
     fun onNicknameChange(newNickname: String) {
         _profileUi.update { it.copy(nickname = newNickname) }
-    }
-
-    fun saveNickname() {
-        val nickname = profileUi.value.nickname
-
-        viewModelScope.launch {
-            _profileUi.update { it.copy(saving = true, error = null) }
-
-            runCatching {
-                profileRepository.updateNickname(nickname)
-            }.onSuccess { profile ->
-                _profileUi.update {
-                    it.copy(
-                        saving = false,
-                        nickname = profile.nickname,
-                        avatarUrl = profile.avatarUrl,
-                        error = null
-                    )
-                }
-            }.onFailure { e ->
-                _profileUi.update {
-                    it.copy(
-                        saving = false,
-                        error = e.message ?: "프로필 저장에 실패했습니다."
-                    )
-                }
-                _uiEvent.emit(UiEvent.ShowToastMsg(e.message ?: "프로필 저장에 실패했습니다."))
-            }
-        }
-    }
-
-    fun onAvatarSelected(uri: Uri) {
-        viewModelScope.launch {
-            _profileUi.update { it.copy(saving = true, error = null) }
-
-            runCatching {
-                profileRepository.updateAvatar(uri)
-            }.onSuccess { profile ->
-                _profileUi.update {
-                    it.copy(
-                        saving = false,
-                        nickname = profile.nickname,
-                        avatarUrl = profile.avatarUrl,
-                        error = null
-                    )
-                }
-            }.onFailure { e ->
-                _profileUi.update {
-                    it.copy(
-                        saving = false,
-                        error = e.message ?: "프로필 이미지 업로드에 실패했습니다."
-                    )
-                }
-                _uiEvent.emit(UiEvent.ShowToastMsg(e.message ?: "프로필 이미지 업로드에 실패했습니다."))
-            }
-        }
     }
 }

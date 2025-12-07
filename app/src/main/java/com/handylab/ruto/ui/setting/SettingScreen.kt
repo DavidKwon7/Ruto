@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -82,7 +83,10 @@ fun SettingScreen(
     val grantedNow = remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= 33)
-                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
             else true
         )
     }
@@ -92,12 +96,6 @@ fun SettingScreen(
     ) { granted ->
         grantedNow.value = granted
         settingViewModel.afterPermissionResult(granted)
-    }
-
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { settingViewModel.onAvatarSelected(it) }
     }
 
     LaunchedEffect(settingUi.needsPermission) {
@@ -122,7 +120,7 @@ fun SettingScreen(
         }
     }
 
-    fun requireNonGuest(action: () -> Unit) {
+    fun navigateProfileEdit() {
         if (isGuest) {
             Toast.makeText(
                 context,
@@ -130,7 +128,7 @@ fun SettingScreen(
                 Toast.LENGTH_SHORT
             ).show()
         } else {
-            action()
+            navController.navigate("tab/profileEdit")
         }
     }
 
@@ -165,16 +163,7 @@ fun SettingScreen(
             onSignOut = { authViewModel.signOut() },
             appVersion = getVersionName(),
             onNicknameChange = { settingViewModel.onNicknameChange(it) },
-            onNicknameSave = {
-                requireNonGuest {
-                    settingViewModel.saveNickname()
-                }
-            },
-            onAvatarClick = {
-                requireNonGuest {
-                    imagePickerLauncher.launch("image/*")
-                }
-            }
+            onClickEditProfile = { navigateProfileEdit() }
         )
     }
 }
@@ -192,17 +181,16 @@ private fun SettingContent(
     onSignOut: () -> Unit,
     appVersion: String,
     onNicknameChange: (String) -> Unit,
-    onNicknameSave: () -> Unit,
-    onAvatarClick: () -> Unit,
+    onClickEditProfile: () -> Unit,
 ) {
-    Column(modifier = modifier
-        .verticalScroll(rememberScrollState())) {
-        ProfileSection(
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+    ) {
+        ProfileSummarySection(
             ui = profileUi,
             isGuest = isGuest,
-            onNicknameChange = onNicknameChange,
-            onNicknameSave = onNicknameSave,
-            onAvatarClick = onAvatarClick
+            onClickEdit = onClickEditProfile
         )
         Spacer(Modifier.padding(vertical = 12.dp))
 
@@ -232,12 +220,10 @@ private fun SettingContent(
 }
 
 @Composable
-private fun ProfileSection(
+private fun ProfileSummarySection(
     ui: ProfileUiState,
     isGuest: Boolean,
-    onNicknameChange: (String) -> Unit,
-    onNicknameSave: () -> Unit,
-    onAvatarClick: () -> Unit,
+    onClickEdit: () -> Unit,
 ) {
     WrappedContent(
         modifier = Modifier.fillMaxWidth()
@@ -248,7 +234,6 @@ private fun ProfileSection(
                 .padding(8.dp)
         ) {
             Text(fontWeight = FontWeight.Bold, text = "프로필")
-            Text("닉네임 및 프로필 사진을 관리합니다.")
             Spacer(Modifier.height(12.dp))
 
             Row(
@@ -258,22 +243,29 @@ private fun ProfileSection(
                 Box(
                     modifier = Modifier
                         .size(64.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onAvatarClick),
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (ui.avatarUrl != null) {
-                        AsyncImage(
-                            model = ui.avatarUrl,
-                            contentDescription = "프로필 이미지",
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "기본 프로필",
-                            modifier = Modifier.size(40.dp)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (ui.avatarUrl != null) {
+                            AsyncImage(
+                                model = ui.avatarUrl,
+                                contentDescription = "프로필 이미지",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "기본 프로필",
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
                     }
                 }
 
@@ -282,31 +274,10 @@ private fun ProfileSection(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    OutlinedTextField(
-                        value = ui.nickname,
-                        onValueChange = onNicknameChange,
-                        label = { Text("닉네임") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                    Text(
+                        text = ui.nickname,
+                        style = MaterialTheme.typography.titleMedium
                     )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Button(
-                        onClick = onNicknameSave,
-                        enabled = !ui.saving,
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        if (ui.saving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .padding(end = 6.dp),
-                                strokeWidth = 2.dp
-                            )
-                        }
-                        Text("수정")
-                    }
 
                     if (isGuest) {
                         Spacer(Modifier.height(4.dp))
@@ -317,6 +288,12 @@ private fun ProfileSection(
                         )
                     }
                 }
+
+                Spacer(Modifier.width(8.dp))
+
+                OutlinedButton(onClick = onClickEdit, enabled = !isGuest) {
+                    Text("수정하기")
+                }
             }
 
             if (ui.loading) {
@@ -325,7 +302,6 @@ private fun ProfileSection(
             }
 
             ui.error?.let { error ->
-                Log.e("SettingScreenError",error)
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = error,
@@ -336,6 +312,7 @@ private fun ProfileSection(
         }
     }
 }
+
 
 @Composable
 private fun PushSettingSection(

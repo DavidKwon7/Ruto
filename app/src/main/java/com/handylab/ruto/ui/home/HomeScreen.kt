@@ -32,6 +32,7 @@ import com.handylab.ruto.ui.routine.RoutineCreateScreen
 import com.handylab.ruto.ui.routine.RoutineListScreen
 import com.handylab.ruto.ui.routine.edit.RoutineEditScreen
 import com.handylab.ruto.ui.setting.SettingScreen
+import com.handylab.ruto.ui.setting.profile.ProfileEditScreen
 import com.handylab.ruto.ui.statistics.StatisticsScreen
 
 @Immutable
@@ -97,6 +98,7 @@ fun HomeScreen(
             ) {
                 RoutineEditScreen(tabsNav)
             }
+            composable("tab/profileEdit") { ProfileEditScreen(tabsNav) }
         }
     }
 }
