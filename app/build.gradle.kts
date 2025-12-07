@@ -146,7 +146,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     // implementation("io.github.jan-tennert.supabase:gotrue-kt")
     implementation("com.google.android.gms:play-services-auth:21.4.0")
-
+    implementation(libs.supabase.storage)
     implementation(libs.kakao.sdk.user)
 
     // ktor
@@ -175,4 +175,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.datastore.preferences)
+
+    implementation(libs.coil.compose)
 }

@@ -25,6 +25,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.ExternalAuthAction
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.storage.Storage
 import javax.inject.Singleton
 
 @Module
@@ -55,6 +56,7 @@ object AppModule {
                 defaultExternalAuthAction = ExternalAuthAction.CustomTabs()
             }
             install(Postgrest)
+            install(Storage)
         }
 
     @Provides
