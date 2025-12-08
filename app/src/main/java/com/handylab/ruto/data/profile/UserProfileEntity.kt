@@ -10,10 +10,12 @@ data class UserProfileEntity(
     @SerialName("user_id") val userId: String,
     val nickname: String,
     @SerialName("avatar_path") val avatarPath: String? = null,
+    @SerialName("avatar_version") val avatarVersion: Int = 0,
 )
 
 fun UserProfileEntity.toDomain(avatarUrl: String?): UserProfile =
     UserProfile(
         nickname = nickname.ifBlank { DEFAULT_NICKNAME },
-        avatarUrl = avatarUrl
+        avatarUrl = avatarUrl,
+        avatarVersion = avatarVersion
     )

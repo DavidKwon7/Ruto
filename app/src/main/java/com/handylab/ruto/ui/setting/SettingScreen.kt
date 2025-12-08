@@ -58,8 +58,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.handylab.ruto.auth.isGuest
+import com.handylab.ruto.auth.userIdOrNull
 import com.handylab.ruto.ui.auth.AuthViewModel
 import com.handylab.ruto.ui.event.UiEvent
+import com.handylab.ruto.ui.setting.profile.AvatarImage
 import com.handylab.ruto.ui.state.UiState
 import com.handylab.ruto.util.getVersionName
 import kotlinx.coroutines.flow.collectLatest
@@ -78,6 +80,10 @@ fun SettingScreen(
 
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val isGuest = authState.isGuest
+    val userId = authState.userIdOrNull
+    val avatarCacheKey = remember(userId, profileUi.avatarVersion) {
+        userId?.let { "avatar_${it}_v${profileUi.avatarVersion}" }
+    }
 
     val context = LocalContext.current
     val grantedNow = remember {
@@ -145,6 +151,7 @@ fun SettingScreen(
             pushUi = settingUi,
             themeMode = themeMode,
             profileUi = profileUi,
+            avatarCacheKey = avatarCacheKey,
             isGuest = isGuest,
             onPushToggle = { want ->
                 val granted = if (Build.VERSION.SDK_INT >= 33)
@@ -162,7 +169,6 @@ fun SettingScreen(
             onThemeChange = { mode -> settingViewModel.setThemeMode(mode) },
             onSignOut = { authViewModel.signOut() },
             appVersion = getVersionName(),
-            onNicknameChange = { settingViewModel.onNicknameChange(it) },
             onClickEditProfile = { navigateProfileEdit() }
         )
     }
@@ -175,12 +181,12 @@ private fun SettingContent(
     pushUi: PushUiState,
     themeMode: ThemeMode,
     profileUi: ProfileUiState,
+    avatarCacheKey: String?,
     isGuest: Boolean,
     onPushToggle: (Boolean) -> Unit,
     onThemeChange: (ThemeMode) -> Unit,
     onSignOut: () -> Unit,
     appVersion: String,
-    onNicknameChange: (String) -> Unit,
     onClickEditProfile: () -> Unit,
 ) {
     Column(
@@ -189,6 +195,7 @@ private fun SettingContent(
     ) {
         ProfileSummarySection(
             ui = profileUi,
+            avatarCacheKey = avatarCacheKey,
             isGuest = isGuest,
             onClickEdit = onClickEditProfile
         )
@@ -222,6 +229,7 @@ private fun SettingContent(
 @Composable
 private fun ProfileSummarySection(
     ui: ProfileUiState,
+    avatarCacheKey: String?,
     isGuest: Boolean,
     onClickEdit: () -> Unit,
 ) {
@@ -246,27 +254,11 @@ private fun ProfileSummarySection(
                         .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (ui.avatarUrl != null) {
-                            AsyncImage(
-                                model = ui.avatarUrl,
-                                contentDescription = "프로필 이미지",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "기본 프로필",
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
+                    AvatarImage(
+                        avatarUrl = ui.avatarUrl,
+                        cacheKey = avatarCacheKey,
+                        size = 52.dp
+                    )
                 }
 
                 Spacer(Modifier.width(16.dp))

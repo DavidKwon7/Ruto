@@ -8,18 +8,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
+import com.handylab.ruto.auth.userIdOrNull
+import com.handylab.ruto.ui.auth.AuthViewModel
 import com.handylab.ruto.ui.setting.ProfileUiState
 
 
@@ -27,10 +26,16 @@ import com.handylab.ruto.ui.setting.ProfileUiState
 @Composable
 fun ProfileEditScreen(
     navController: NavHostController,
+    authViewModel: AuthViewModel = hiltViewModel(),
     viewModel: ProfileEditViewModel = hiltViewModel(),
 ) {
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val ui by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val userId = authState.userIdOrNull
+    val avatarCacheKey = remember(userId, ui.avatarVersion) {
+        userId?.let { "avatar_${it}_v${ui.avatarVersion}" }
+    }
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -64,11 +69,12 @@ fun ProfileEditScreen(
                 .padding(pad)
                 .padding(16.dp),
             ui = ui,
+            avatarCacheKey = avatarCacheKey,
             onAvatarClick = { imagePickerLauncher.launch("image/*") },
             onNicknameChange = viewModel::onNicknameChange,
             onClickSave = {
                 viewModel.onSave()
-                navController.popBackStack()
+                // navController.popBackStack()
             }
         )
     }
@@ -78,6 +84,7 @@ fun ProfileEditScreen(
 private fun ProfileEditContent(
     modifier: Modifier = Modifier,
     ui: ProfileUiState,
+    avatarCacheKey: String?,
     onAvatarClick: () -> Unit,
     onNicknameChange: (String) -> Unit,
     onClickSave: () -> Unit,
@@ -88,34 +95,17 @@ private fun ProfileEditContent(
     ) {
         Spacer(Modifier.height(24.dp))
 
+
         Box(
             modifier = Modifier
-                .size(200.dp)
                 .clip(CircleShape)
-                .clickable(onClick = onAvatarClick),
-            contentAlignment = Alignment.Center
+                .clickable(onClick = onAvatarClick)
         ) {
-            if (ui.avatarUrl != null) {
-                AsyncImage(
-                    model = ui.avatarUrl,
-                    contentDescription = "프로필 이미지",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(320.dp)
-                        .clip(CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "기본 프로필",
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
-            }
+            AvatarImage(
+                avatarUrl = ui.avatarUrl,
+                cacheKey = avatarCacheKey, // 서버 이미지일 때만 캐시 키 사용됨
+                size = 200.dp
+            )
         }
 
         Spacer(Modifier.height(16.dp))

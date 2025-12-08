@@ -59,7 +59,8 @@ class ProfileRepository @Inject constructor(
             // 아직 프로필 레코드가 없을 때: 기본값
             return UserProfile(
                 nickname = DEFAULT_NICKNAME,
-                avatarUrl = null
+                avatarUrl = null,
+                avatarVersion = 0
             )
         }
 
@@ -78,11 +79,14 @@ class ProfileRepository @Inject constructor(
             .decodeList<UserProfileEntity>()
 
         val existing = existingRows.firstOrNull()
+        val path = existing?.avatarPath ?: avatarPath(userId)
+        val version = existing?.avatarVersion ?: 0
 
         val upsertRow = UserProfileEntity(
             userId = userId,
             nickname = nickname,
-            avatarPath = existing?.avatarPath
+            avatarPath = path,
+            avatarVersion = version
         )
 
         val row = supabase.postgrest["app_user_profiles"]
@@ -106,14 +110,23 @@ class ProfileRepository @Inject constructor(
             } ?: error("이미지 파일을 읽을 수 없습니다.")
         }
 
+        logger.d("ProfileRepo", "updateAvatar: user=$userId, path=$path, bytes=${bytes.size}")
+
         val bucket = supabase.storage.from("avatars")
 
-        bucket.upload(
-            path = path,
-            data = bytes
-        ) {
-            upsert = true
+        val uploadResult = try {
+            bucket.upload(
+                path = path,
+                data = bytes
+            ) {
+                upsert = true
+            }
+        } catch (e: Exception) {
+            logger.e("ProfileRepo", "avatar upload fail: $path", e)
+            throw e
         }
+
+        logger.d("ProfileRepo", "avatar upload success: $uploadResult")
 
         val existingRows = supabase.postgrest["app_user_profiles"]
             .select {
@@ -123,11 +136,13 @@ class ProfileRepository @Inject constructor(
 
         val existing = existingRows.firstOrNull()
         val nickname = existing?.nickname ?: DEFAULT_NICKNAME
+        val newVersion = (existing?.avatarVersion ?: 0) + 1
 
         val upsertRow = UserProfileEntity(
             userId = userId,
             nickname = nickname,
-            avatarPath = path
+            avatarPath = path,
+            avatarVersion = newVersion,
         )
 
         val row = supabase.postgrest["app_user_profiles"]

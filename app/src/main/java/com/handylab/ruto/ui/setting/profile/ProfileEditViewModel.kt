@@ -46,6 +46,7 @@ class ProfileEditViewModel @Inject constructor(
                         loading = false,
                         nickname = profile.nickname,
                         avatarUrl = profile.avatarUrl,
+                        avatarVersion = profile.avatarVersion,
                         saving = false,
                         error = null
                     )
@@ -103,6 +104,7 @@ class ProfileEditViewModel @Inject constructor(
                     loading = false,
                     nickname = profile.nickname,
                     avatarUrl = profile.avatarUrl,
+                    avatarVersion = profile.avatarVersion,
                     saving = false,
                     error = null
                 )

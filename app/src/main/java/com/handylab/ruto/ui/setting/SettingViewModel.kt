@@ -35,6 +35,7 @@ data class ProfileUiState(
     val saving: Boolean = false,
     val nickname: String = DEFAULT_NICKNAME,
     val avatarUrl: String? = null,
+    val avatarVersion: Int = 0,
     val error: String? = null,
 )
 
@@ -123,6 +124,7 @@ class SettingViewModel @Inject constructor(
                         loading = false,
                         nickname = profile.nickname.ifBlank { DEFAULT_NICKNAME },
                         avatarUrl = profile.avatarUrl,
+                        avatarVersion = profile.avatarVersion,
                         saving = false,
                         error = null
                     )
@@ -131,15 +133,12 @@ class SettingViewModel @Inject constructor(
                     loading = false,
                     nickname = DEFAULT_NICKNAME,
                     avatarUrl = null,
+                    avatarVersion = 0,
                     saving = false,
                     error = e.message ?: "프로필을 불러오지 못했습니다."
                 )
                 _uiEvent.emit(UiEvent.ShowToastMsg(e.message ?: "프로필을 불러오지 못했습니다."))
             }
         }
-    }
-
-    fun onNicknameChange(newNickname: String) {
-        _profileUi.update { it.copy(nickname = newNickname) }
     }
 }
