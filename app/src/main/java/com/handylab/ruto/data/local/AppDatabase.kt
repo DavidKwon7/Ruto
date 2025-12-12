@@ -12,7 +12,7 @@ import com.handylab.ruto.data.local.statistics.StatisticsLocal
 @Database(
     entities = [
         PendingComplete::class,
-        RoutineCompletionLocal::class,
+        RoutineCompletionEntity::class,
         StatisticsLocal::class,
         RoutineEntity::class
     ],

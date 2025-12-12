@@ -3,7 +3,7 @@ package com.handylab.ruto.data.routine
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.handylab.ruto.data.local.RoutineCompletionDao
-import com.handylab.ruto.data.local.RoutineCompletionLocal
+import com.handylab.ruto.data.local.RoutineCompletionEntity
 import com.handylab.ruto.data.local.routine.RoutineDao
 import com.handylab.ruto.data.local.routine.toDomain
 import com.handylab.ruto.data.local.routine.toEntity
@@ -96,31 +96,31 @@ class RoutineRepositoryImpl @Inject constructor(
         resp
     }
 
-    override suspend fun updateRoutine(req: RoutineUpdateRequest): Result<Boolean> = runCatching {
+    override suspend fun updateRoutine(request: RoutineUpdateRequest): Result<Boolean> = runCatching {
         val ok = ownerKey()
 
-        val before = routineDao.getOne(ok, req.id)?.toDomain()
-            ?: api.getRoutine(req.id)
+        val before = routineDao.getOne(ok, request.id)?.toDomain()
+            ?: api.getRoutine(request.id)
 
         val optimistic = before.copy(
-            name = req.name ?: before.name,
-            cadence = req.cadence ?: before.cadence,
-            startDate = req.startDate ?: before.startDate,
-            endDate   = req.endDate   ?: before.endDate,
-            notifyEnabled = req.notifyEnabled ?: before.notifyEnabled,
-            notifyTime    = req.notifyTime    ?: before.notifyTime,
-            timezone      = req.timezone      ?: before.timezone,
-            tags          = req.tags          ?: before.tags
+            name = request.name ?: before.name,
+            cadence = request.cadence ?: before.cadence,
+            startDate = request.startDate ?: before.startDate,
+            endDate   = request.endDate   ?: before.endDate,
+            notifyEnabled = request.notifyEnabled ?: before.notifyEnabled,
+            notifyTime    = request.notifyTime    ?: before.notifyTime,
+            timezone      = request.timezone      ?: before.timezone,
+            tags          = request.tags          ?: before.tags
         )
         routineDao.upsert(optimistic.toEntity(ok))
 
-        val okRemote = api.updateRoutine(req).ok
+        val okRemote = api.updateRoutine(request).ok
         if (!okRemote) {
             routineDao.upsert(before.toEntity(ok))
             return@runCatching false
         }
 
-        val latest = api.getRoutine(req.id)
+        val latest = api.getRoutine(request.id)
         routineDao.upsert(latest.toEntity(ok))
         true
     }
@@ -141,7 +141,7 @@ class RoutineRepositoryImpl @Inject constructor(
     override suspend fun setCompletionLocal(routineId: String, completed: Boolean) {
         val today = LocalDate.now().format(dateFmt)
         val ok = ownerKey()
-        val entity = RoutineCompletionLocal(
+        val entity = RoutineCompletionEntity(
             key = "$ok#$routineId#$today",
             ownerKey = ok,
             routineId = routineId,

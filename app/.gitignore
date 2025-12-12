@@ -62,6 +62,9 @@ gen-external-apklibs
 *.tar.gz
 *.rar
 
+# Android Studio deployment target 설정
+.idea/deploymentTargetSelector.xml
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*

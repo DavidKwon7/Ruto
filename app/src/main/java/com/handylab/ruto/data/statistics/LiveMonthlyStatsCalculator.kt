@@ -3,7 +3,7 @@ package com.handylab.ruto.data.statistics
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.handylab.ruto.data.local.RoutineCompletionDao
-import com.handylab.ruto.data.local.RoutineCompletionLocal
+import com.handylab.ruto.data.local.RoutineCompletionEntity
 import com.handylab.ruto.data.local.routine.RoutineDao
 import com.handylab.ruto.data.local.routine.toDomain
 import com.handylab.ruto.data.security.SecureStore
@@ -87,7 +87,7 @@ class LiveMonthlyStatsCalculator @Inject constructor(
         from: LocalDate,
         toEx: LocalDate,
         routines: List<RoutineRead>,
-        completes: List<RoutineCompletionLocal>,
+        completes: List<RoutineCompletionEntity>,
         days: Int
     ): StatisticsCompletionsResponse {
         // 날짜 인덱스

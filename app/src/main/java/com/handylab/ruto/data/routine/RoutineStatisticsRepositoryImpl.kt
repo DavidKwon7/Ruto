@@ -5,6 +5,8 @@ import androidx.annotation.RequiresApi
 import com.handylab.ruto.data.local.statistics.StatisticsDao
 import com.handylab.ruto.data.local.statistics.StatisticsLocal
 import com.handylab.ruto.data.statistics.LiveMonthlyStatsCalculator
+import com.handylab.ruto.data.statistics.model.StatisticsCompletionsResponseDto
+import com.handylab.ruto.data.statistics.model.toDto
 import com.handylab.ruto.domain.routine.RoutineStatisticsRepository
 import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
 import com.handylab.ruto.util.AppLogger
@@ -35,8 +37,9 @@ class RoutineStatisticsRepositoryImpl @Inject constructor(
         launch {
             runCatching { api.fetchMonthlyCompletions(tz, month) }
                 .onSuccess { fresh ->
+                    val dto = fresh.toDto()
                     val key = "$month|$tz|${currentScope()}|"
-                    val payload = json.encodeToString(StatisticsCompletionsResponse.serializer(), fresh)
+                    val payload = json.encodeToString(StatisticsCompletionsResponseDto.serializer(), dto)
                     statisticsDao.upsert(StatisticsLocal(key, payload, System.currentTimeMillis()))
                 }
                 .onFailure { it ->

@@ -53,7 +53,7 @@ class ProfileRepositoryImpl @Inject constructor(
             .select {
                 filter { eq("user_id", userId) }
             }
-            .decodeList<UserProfileEntity>()
+            .decodeList<UserProfileDto>()
 
         val row = rows.firstOrNull()
         if (row == null) {
@@ -76,13 +76,13 @@ class ProfileRepositoryImpl @Inject constructor(
             .select {
                 filter { eq("user_id", userId) }
             }
-            .decodeList<UserProfileEntity>()
+            .decodeList<UserProfileDto>()
 
         val existing = existingRows.firstOrNull()
         val path = existing?.avatarPath ?: avatarPath(userId)
         val version = existing?.avatarVersion ?: 0
 
-        val upsertRow = UserProfileEntity(
+        val upsertRow = UserProfileDto(
             userId = userId,
             nickname = nickname,
             avatarPath = path,
@@ -93,7 +93,7 @@ class ProfileRepositoryImpl @Inject constructor(
             .upsert(upsertRow) {
                 select()
             }
-            .decodeSingle<UserProfileEntity>()
+            .decodeSingle<UserProfileDto>()
 
         val avatarUrl = resolveAvatarUrl(row.avatarPath)
         return row.toDomain(avatarUrl)
@@ -131,13 +131,13 @@ class ProfileRepositoryImpl @Inject constructor(
             .select {
                 filter { eq("user_id", userId) }
             }
-            .decodeList<UserProfileEntity>()
+            .decodeList<UserProfileDto>()
 
         val existing = existingRows.firstOrNull()
         val nickname = existing?.nickname ?: DEFAULT_NICKNAME
         val newVersion = (existing?.avatarVersion ?: 0) + 1
 
-        val upsertRow = UserProfileEntity(
+        val upsertRow = UserProfileDto(
             userId = userId,
             nickname = nickname,
             avatarPath = path,
@@ -148,7 +148,7 @@ class ProfileRepositoryImpl @Inject constructor(
             .upsert(upsertRow) {
                 select()
             }
-            .decodeSingle<UserProfileEntity>()
+            .decodeSingle<UserProfileDto>()
 
         val avatarUrl = resolveAvatarUrl(row.avatarPath)
         return row.toDomain(avatarUrl)

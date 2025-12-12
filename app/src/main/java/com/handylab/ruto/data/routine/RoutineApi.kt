@@ -57,22 +57,22 @@ class RoutineApi @Inject constructor(
     ): RoutineCreateResponse {
         val resp = client.post("$base/functions/v1/create-routine") {
             header("apikey", anonKey)
-            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
+            applyAuthHeaders(supabase, secure)
             setBody(RoutineCreateRequestDto.fromDomain(req))
         }
         if (!resp.status.isSuccess()) {
             val body = resp.bodyAsText()
             throw IllegalStateException("create-routine failed: ${resp.status} $body")
         }
-
-        return resp.body()
+        val dto: RoutineCreateResponseDto = resp.body()
+        return dto.toDomain()
     }
 
     suspend fun getRoutineList(): RoutineListResponse =
         client.get("$base/functions/v1/routines") {
             header("apikey", BuildConfig.SUPABASE_KEY)
             header(HttpHeaders.Accept, "application/json")
-            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
+            applyAuthHeaders(supabase, secure)
         }.body<RoutineListResponseDto>().toDomain()
     
     suspend fun getRoutine(id: String): RoutineRead {

@@ -11,6 +11,58 @@ import kotlin.math.roundToInt
 
 @Immutable
 @Serializable
+data class StatisticsCompletionsResponseDto(
+    val range: StatisticsRangeDto,
+    val heatmap: List<HeatmapDayDto>,
+    val routines: List<RoutineDaysDto>,
+) {
+    fun toDomain() = StatisticsCompletionsResponse(
+        range = range.toDomain(),
+        heatmap = heatmap.map { it.toDomain() },
+        routines = routines.map { it.toDomain() },
+    )
+}
+
+fun StatisticsCompletionsResponse.toDto() = StatisticsCompletionsResponseDto(
+    range = StatisticsRangeDto(
+        from = range.from,
+        toExclusive = range.toExclusive,
+        tz = range.tz,
+    ),
+    heatmap = heatmap.map {
+        HeatmapDayDto(
+            date = it.date,
+            count = it.count,
+            total = it.total,
+            percent = it.percent,
+        )
+    },
+    routines = routines.map {
+        RoutineDaysDto(
+            routineId = it.routineId,
+            name = it.name,
+            days = it.days,
+        )
+    },
+)
+
+
+@Immutable
+@Serializable
+data class RoutineDaysDto(
+    @SerialName("routine_id") val routineId: String,
+    val name: String,
+    val days: List<Int> // 0/1
+) {
+    fun toDomain() = RoutineDays(
+        routineId = routineId,
+        name = name,
+        days = days,
+    )
+}
+
+@Immutable
+@Serializable
 data class StatisticsRangeDto(
     val from: String,        // ISO-8601 local "YYYY-MM-01T00:00:00+09:00" 등
     val toExclusive: String, // 다음달 1일 00:00:00
@@ -40,33 +92,5 @@ data class HeatmapDayDto(
         count = count,
         total = total,
         percent = percent,
-    )
-}
-
-@Immutable
-@Serializable
-data class RoutineDaysDto(
-    @SerialName("routine_id") val routineId: String,
-    val name: String,
-    val days: List<Int> // 0/1
-) {
-    fun toDomain() = RoutineDays(
-        routineId = routineId,
-        name = name,
-        days = days,
-    )
-}
-
-@Immutable
-@Serializable
-data class StatisticsCompletionsResponseDto(
-    val range: StatisticsRangeDto,
-    val heatmap: List<HeatmapDayDto>,
-    val routines: List<RoutineDaysDto>,
-) {
-    fun toDomain() = StatisticsCompletionsResponse(
-        range = range.toDomain(),
-        heatmap = heatmap.map { it.toDomain() },
-        routines = routines.map { it.toDomain() },
     )
 }
