@@ -1,6 +1,6 @@
 package com.handylab.ruto.auth
 
-import com.handylab.ruto.domain.AuthState
+import com.handylab.ruto.domain.auth.AuthState
 
 /**
  * 게스트 로그인 여부 판별

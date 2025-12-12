@@ -6,9 +6,9 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.data.fcm.RoutinePushHandler
-import com.handylab.ruto.data.profile.ProfileRepository
 import com.handylab.ruto.data.setting.SettingRepository
 import com.handylab.ruto.domain.profile.DEFAULT_NICKNAME
+import com.handylab.ruto.domain.profile.usecase.LoadProfileUseCase
 import com.handylab.ruto.ui.event.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,7 +43,7 @@ data class ProfileUiState(
 class SettingViewModel @Inject constructor(
     private val handler: RoutinePushHandler,
     private val settingRepository: SettingRepository,
-    private val profileRepository: ProfileRepository,
+    private val loadProfileUseCase: LoadProfileUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         PushUiState(
@@ -118,7 +118,7 @@ class SettingViewModel @Inject constructor(
             _profileUi.update { it.copy(loading = true, error = null) }
 
             runCatching {
-                profileRepository.loadProfile()
+                loadProfileUseCase()
             }.onSuccess { profile ->
                 _profileUi.value = ProfileUiState(
                         loading = false,

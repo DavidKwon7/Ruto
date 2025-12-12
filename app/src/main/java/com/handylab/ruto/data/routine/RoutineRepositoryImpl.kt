@@ -3,16 +3,16 @@ package com.handylab.ruto.data.routine
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.handylab.ruto.data.local.RoutineCompletionDao
-import com.handylab.ruto.data.local.RoutineCompletionLocal
+import com.handylab.ruto.data.local.RoutineCompletionEntity
 import com.handylab.ruto.data.local.routine.RoutineDao
 import com.handylab.ruto.data.local.routine.toDomain
 import com.handylab.ruto.data.local.routine.toEntity
-import com.handylab.ruto.data.notification.FcmTokenProvider
 import com.handylab.ruto.data.security.SecureStore
 import com.handylab.ruto.domain.routine.RoutineCadence
 import com.handylab.ruto.domain.routine.RoutineCreateRequest
 import com.handylab.ruto.domain.routine.RoutineCreateResponse
 import com.handylab.ruto.domain.routine.RoutineRead
+import com.handylab.ruto.domain.routine.RoutineRepository
 import com.handylab.ruto.domain.routine.RoutineTag
 import com.handylab.ruto.domain.routine.RoutineUpdateRequest
 import com.handylab.ruto.domain.routine.towrite
@@ -29,41 +29,43 @@ import javax.inject.Singleton
 
 @Singleton
 @RequiresApi(Build.VERSION_CODES.O)
-class RoutineRepository @Inject constructor(
+class RoutineRepositoryImpl @Inject constructor(
     private val api: RoutineApi,
-    private val fcm: FcmTokenProvider,
     private val supabase: SupabaseClient,
     private val secure: SecureStore,
     private val completionDao: RoutineCompletionDao,
     private val routineDao: RoutineDao,
-) {
+) : RoutineRepository {
     private val dateFmt = DateTimeFormatter.ISO_LOCAL_DATE   // YYYY-MM-DD
-    private val timeFmt = DateTimeFormatter.ofPattern("HH:mm")
 
-    /** user:<uid> | guest:<gid> */
     private fun ownerKey(): String {
         val user = supabase.auth.currentSessionOrNull()?.user?.id
         return if (user != null) "user:$user" else "guest:${ensureGuestId(secure)}"
     }
 
-    /** 목록 스트림 (계정별) */
-    fun observeRoutineList(): Flow<List<RoutineRead>> =
+    override fun observeRoutineList(): Flow<List<RoutineRead>> =
         routineDao.observeAll(ownerKey())
             .map { list -> list.map { it.toDomain() } }
 
-    /** 단건 스트림 (계정별) */
-    fun observeRoutine(id: String): Flow<RoutineRead?> =
+    override fun observeRoutine(id: String): Flow<RoutineRead?> =
         routineDao.observeOne(ownerKey(), id)
             .map { it?.toDomain() }
 
-    /** 서버에서 최신 목록을 끌어와 DB에 반영(동기화) */
-    suspend fun syncRoutineList() {
+    override fun observeTodayCompletionIds(): Flow<Set<String>> =
+        completionDao.observeByDate(ownerKey(), LocalDate.now().format(dateFmt))
+            .map { rows -> rows.filter { it.completed }.map { it.routineId }.toSet() }
+
+    override suspend fun refreshRoutines() {
         val ok = ownerKey()
         val remote = api.getRoutineList().items
         routineDao.upsertAll(remote.map { it.toEntity(ok) })
     }
 
-    suspend fun registerRoutine(
+    override suspend fun fetchRoutine(id: String): Result<RoutineRead> = runCatching {
+        api.getRoutine(id)
+    }
+
+    override suspend fun registerRoutine(
         name: String,
         cadence: RoutineCadence,
         startDate: LocalDate,
@@ -85,83 +87,61 @@ class RoutineRepository @Inject constructor(
             endDate = endDate.format(dateFmt),
             notifyEnabled = notifyEnabled,
             notifyTime = notifyTime,
-            timezone = TimeZone.getDefault().id,       // ex) Asia/Seoul
+            timezone = TimeZone.getDefault().id,
             tags = tagStrings,
         )
-        // api.createRoutine(req)
         val resp = api.createRoutine(req)
         val created = api.getRoutine(resp.id)
         routineDao.upsert(created.toEntity(ownerKey()))
         resp
     }
 
-    suspend fun getRoutineList(): Result<List<RoutineRead>> = runCatching {
-        api.getRoutineList().items
-    }
-
-    suspend fun getRoutine(id: String): Result<RoutineRead> = runCatching {
-        api.getRoutine(id)
-    }
-
-    suspend fun updateRoutine(req: RoutineUpdateRequest): Result<Boolean> = runCatching {
+    override suspend fun updateRoutine(request: RoutineUpdateRequest): Result<Boolean> = runCatching {
         val ok = ownerKey()
 
-        val before = routineDao.getOne(ok, req.id)?.toDomain()
-            ?: api.getRoutine(req.id)
+        val before = routineDao.getOne(ok, request.id)?.toDomain()
+            ?: api.getRoutine(request.id)
 
-        // 낙관적 캐시
         val optimistic = before.copy(
-            name = req.name ?: before.name,
-            cadence = req.cadence ?: before.cadence,
-            startDate = req.startDate ?: before.startDate,
-            endDate   = req.endDate   ?: before.endDate,
-            notifyEnabled = req.notifyEnabled ?: before.notifyEnabled,
-            notifyTime    = req.notifyTime    ?: before.notifyTime,
-            timezone      = req.timezone      ?: before.timezone,
-            tags          = req.tags          ?: before.tags
+            name = request.name ?: before.name,
+            cadence = request.cadence ?: before.cadence,
+            startDate = request.startDate ?: before.startDate,
+            endDate   = request.endDate   ?: before.endDate,
+            notifyEnabled = request.notifyEnabled ?: before.notifyEnabled,
+            notifyTime    = request.notifyTime    ?: before.notifyTime,
+            timezone      = request.timezone      ?: before.timezone,
+            tags          = request.tags          ?: before.tags
         )
         routineDao.upsert(optimistic.toEntity(ok))
 
-        val okRemote = api.updateRoutine(req).ok
+        val okRemote = api.updateRoutine(request).ok
         if (!okRemote) {
-            // 롤백
             routineDao.upsert(before.toEntity(ok))
             return@runCatching false
         }
 
-        // 최신 단건 재주입
-        val latest = api.getRoutine(req.id)
+        val latest = api.getRoutine(request.id)
         routineDao.upsert(latest.toEntity(ok))
         true
     }
 
-    suspend fun deleteRoutine(id: String): Result<Boolean> = runCatching {
+    override suspend fun deleteRoutine(id: String): Result<Boolean> = runCatching {
         val ok = ownerKey()
         val snapshot = routineDao.getOne(ok, id)
         routineDao.deleteById(ok, id)
 
         val okRemote = api.deleteRoutine(id).ok
         if (!okRemote) {
-            // 실패시 복구
             if (snapshot != null) routineDao.upsert(snapshot)
             return@runCatching false
         }
         true
     }
 
-    suspend fun refreshFromServer() = syncRoutineList()
-
-    /** 오늘(로컬)의 완료 목록 스트림 */
-    fun observeTodayCompletions(): Flow<List<RoutineCompletionLocal>> {
-        val today = LocalDate.now().format(dateFmt)
-        return completionDao.observeByDate(ownerKey(), today)
-    }
-
-    /** 오늘 완료 토글 로컬 저장 (계정별) */
-    suspend fun setCompletionLocal(routineId: String, completed: Boolean) {
+    override suspend fun setCompletionLocal(routineId: String, completed: Boolean) {
         val today = LocalDate.now().format(dateFmt)
         val ok = ownerKey()
-        val entity = RoutineCompletionLocal(
+        val entity = RoutineCompletionEntity(
             key = "$ok#$routineId#$today",
             ownerKey = ok,
             routineId = routineId,

@@ -32,7 +32,8 @@ object NetworkModule {
         encodeDefaults = true
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideHttpClient(json: Json): HttpClient = HttpClient(Android) {
         install(ContentNegotiation) { json(json) }
         install(HttpTimeout) {

@@ -8,13 +8,13 @@ import androidx.room.Query
 @Dao
 interface PendingCompleteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(items: List<PendingComplete>)
+    suspend fun upsertAll(items: List<PendingCompleteEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(item: PendingComplete)
+    suspend fun upsert(item: PendingCompleteEntity)
 
     @Query("SELECT * FROM pending_completes LIMIT :limit")
-    suspend fun loadBatch(limit: Int = 50): List<PendingComplete>
+    suspend fun loadBatch(limit: Int = 50): List<PendingCompleteEntity>
 
     @Query("DELETE FROM pending_completes WHERE opId IN (:opIds)")
     suspend fun deleteByOpIds(opIds: List<String>)

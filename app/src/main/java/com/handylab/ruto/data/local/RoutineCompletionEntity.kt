@@ -13,7 +13,7 @@ import androidx.room.PrimaryKey
     tableName = "routine_completions",
     indices = [Index(value = ["ownerKey", "routineId", "date"], unique = true)]
 )
-data class RoutineCompletionLocal(
+data class RoutineCompletionEntity(
     @PrimaryKey val key: String,      // "$routineId#$date"
     val ownerKey: String,
     val routineId: String,

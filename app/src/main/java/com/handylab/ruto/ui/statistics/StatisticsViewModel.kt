@@ -5,9 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.handylab.ruto.data.routine.RoutineMonthlyRepository
-import com.handylab.ruto.data.statistics.model.HeatmapDay
-import com.handylab.ruto.data.statistics.model.RoutineDays
+import com.handylab.ruto.domain.routine.HeatmapDay
+import com.handylab.ruto.domain.routine.RoutineDays
+import com.handylab.ruto.domain.routine.usecase.ObserveMonthlyCompletionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +34,7 @@ data class MonthlyUiState(
 @HiltViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 class StatisticsViewModel @Inject constructor(
-    private val repo: RoutineMonthlyRepository
+    private val observeMonthlyCompletionsUseCase: ObserveMonthlyCompletionsUseCase
 ) : ViewModel() {
     private val _ui = MutableStateFlow(MonthlyUiState())
     val ui: StateFlow<MonthlyUiState> = _ui.asStateFlow()
@@ -44,7 +44,7 @@ class StatisticsViewModel @Inject constructor(
     fun startObserving(month: String, tz: String = ZoneId.systemDefault().id) {
         job?.cancel()
         _ui.update { it.copy(loading = true, month = month, tz = tz, error = null) }
-        job = repo.observeMonthly(tz, month)
+        job = observeMonthlyCompletionsUseCase(tz, month)
             .onEach { res ->
                 _ui.update { it.copy(
                     loading = false,

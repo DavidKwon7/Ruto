@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.handylab.ruto.auth.AuthProvider
 import com.handylab.ruto.data.auth.AuthRepository
 import com.handylab.ruto.data.fcm.RoutinePushHandler
-import com.handylab.ruto.domain.AuthState
-import com.handylab.ruto.domain.SocialProvider
+import com.handylab.ruto.domain.auth.AuthState
+import com.handylab.ruto.domain.auth.SocialProvider
 import com.handylab.ruto.ui.event.UiEvent
 import com.handylab.ruto.ui.state.UiState
 import com.handylab.ruto.util.AppLogger

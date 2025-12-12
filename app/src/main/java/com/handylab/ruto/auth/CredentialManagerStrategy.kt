@@ -9,7 +9,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.Dispatchers
 import java.security.MessageDigest
 import java.util.UUID
-import com.handylab.ruto.domain.IdTokenPayload
+import com.handylab.ruto.domain.auth.IdTokenPayload
 import kotlinx.coroutines.withContext
 
 class CredentialManagerStrategy(

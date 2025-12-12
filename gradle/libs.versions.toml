@@ -39,6 +39,9 @@ androidx-datastore = "1.2.0"
 
 coil = "2.7.0"
 
+navigationCompose = "2.8.0"
+securityCrypto = "1.1.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -80,7 +83,6 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.7.3" }
 
-
 kakao-sdk-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao-sdk" }
 androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
 
@@ -105,6 +107,12 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
+# Navigation Compose runtime
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+
+# Security Crypto
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+androidx-security-crypto-ktx = { module = "androidx.security:security-crypto-ktx", version.ref = "securityCrypto" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

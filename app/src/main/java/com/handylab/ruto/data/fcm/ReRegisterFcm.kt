@@ -1,7 +1,7 @@
 package com.handylab.ruto.data.fcm
 
 import com.handylab.ruto.BuildConfig
-import com.handylab.ruto.domain.fcm.RegisterFcmModels
+import com.handylab.ruto.data.fcm.model.RegisterFcmModels
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
 import java.util.Locale

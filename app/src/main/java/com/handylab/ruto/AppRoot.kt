@@ -16,7 +16,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.handylab.ruto.domain.AuthState
+import com.handylab.ruto.domain.auth.AuthState
 import com.handylab.ruto.ui.home.HomeScreen
 import com.handylab.ruto.ui.auth.LoginScreen
 import com.handylab.ruto.ui.auth.AuthViewModel

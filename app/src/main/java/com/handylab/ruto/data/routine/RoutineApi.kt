@@ -2,18 +2,18 @@ package com.handylab.ruto.data.routine
 
 import com.handylab.ruto.BuildConfig
 import com.handylab.ruto.data.security.SecureStore
-import com.handylab.ruto.data.statistics.model.StatisticsCompletionsResponse
+import com.handylab.ruto.data.statistics.StatisticsCompletionsResponseDto
 import com.handylab.ruto.domain.routine.CompleteBatchRequest
 import com.handylab.ruto.domain.routine.CompleteBatchResponse
 import com.handylab.ruto.domain.routine.CompleteItem
 import com.handylab.ruto.domain.routine.RoutineCreateRequest
 import com.handylab.ruto.domain.routine.RoutineCreateResponse
-import com.handylab.ruto.domain.routine.RoutineDeleteRequest
 import com.handylab.ruto.domain.routine.RoutineDeleteResponse
 import com.handylab.ruto.domain.routine.RoutineListResponse
 import com.handylab.ruto.domain.routine.RoutineRead
 import com.handylab.ruto.domain.routine.RoutineUpdateRequest
 import com.handylab.ruto.domain.routine.RoutineUpdateResponse
+import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
 import com.handylab.ruto.util.AppLogger
 import com.handylab.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
@@ -36,7 +36,8 @@ class RoutineApi @Inject constructor(
     private val client: HttpClient,
     private val supabase: SupabaseClient,
     private val secure: SecureStore,
-    private val logger: AppLogger
+    private val logger: AppLogger,
+    private val json: Json,
 ) {
     private val base = BuildConfig.SUPABASE_URL
 
@@ -46,23 +47,23 @@ class RoutineApi @Inject constructor(
     ): RoutineCreateResponse {
         val resp = client.post("$base/functions/v1/create-routine") {
             header("apikey", anonKey)
-            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
-            setBody(req)
+            applyAuthHeaders(supabase, secure)
+            setBody(RoutineCreateRequestDto.fromDomain(req))
         }
         if (!resp.status.isSuccess()) {
             val body = resp.bodyAsText()
             throw IllegalStateException("create-routine failed: ${resp.status} $body")
         }
-
-        return resp.body()
+        val dto: RoutineCreateResponseDto = resp.body()
+        return dto.toDomain()
     }
 
     suspend fun getRoutineList(): RoutineListResponse =
         client.get("$base/functions/v1/routines") {
             header("apikey", BuildConfig.SUPABASE_KEY)
             header(HttpHeaders.Accept, "application/json")
-            applyAuthHeaders(supabase, secure)   // ✅ 공통 규칙 적용
-        }.body()
+            applyAuthHeaders(supabase, secure)
+        }.body<RoutineListResponseDto>().toDomain()
     
     suspend fun getRoutine(id: String): RoutineRead {
         require(id.isNotBlank()) { "routine id is blank" }
@@ -78,33 +79,29 @@ class RoutineApi @Inject constructor(
         if (!resp.status.isSuccess()) {
             throw IllegalStateException("get-routine failed: ${resp.status} $raw")
         }
-        return Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-            explicitNulls = false
-        }.decodeFromString(raw)
+        return json.decodeFromString<RoutineReadDto>(raw).toDomain()
     }
 
     suspend fun updateRoutine(req: RoutineUpdateRequest): RoutineUpdateResponse =
         client.post("$base/functions/v1/update-routine") {
             header("apikey", BuildConfig.SUPABASE_KEY)
             applyAuthHeaders(supabase, secure)
-            setBody(req) // null 필드 제외되어 전송됨(explicitNulls=false)
-        }.body()
+            setBody(RoutineUpdateRequestDto.fromDomain(req)) // null 필드 제외되어 전송됨(explicitNulls=false)
+        }.body<RoutineUpdateResponseDto>().toDomain()
 
     suspend fun deleteRoutine(id: String): RoutineDeleteResponse =
         client.post("$base/functions/v1/delete-routine") {
             header("apikey", BuildConfig.SUPABASE_KEY)
             applyAuthHeaders(supabase, secure)
-            setBody(RoutineDeleteRequest(id))
-        }.body()
+            setBody(RoutineDeleteRequestDto(id))
+        }.body<RoutineDeleteResponseDto>().toDomain()
 
     suspend fun completeRoutinesBatch(items: List<CompleteItem>): CompleteBatchResponse =
         client.post("$base/functions/v1/complete-routines") {
             header("apikey", BuildConfig.SUPABASE_KEY)
             applyAuthHeaders(supabase, secure)
-            setBody(CompleteBatchRequest(items))
-        }.body()
+            setBody(CompleteBatchRequestDto.fromDomain(CompleteBatchRequest(items)))
+        }.body<CompleteBatchResponseDto>().toDomain()
 
     suspend fun fetchMonthlyCompletions(
         tz: String,
@@ -125,7 +122,7 @@ class RoutineApi @Inject constructor(
         if (!resp.status.isSuccess()) {
             throw IllegalStateException("monthly fetch failed: ${resp.status} ${resp.body<String>()}")
         }
-        return resp.body()
+        return resp.body<StatisticsCompletionsResponseDto>().toDomain()
     }
 
 }

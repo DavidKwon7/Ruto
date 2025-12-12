@@ -1,12 +1,9 @@
 package com.handylab.ruto.domain.routine
 
 import androidx.compose.runtime.Immutable
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerialName
 import kotlin.math.roundToInt
 
 @Immutable
-@Serializable
 data class StatisticsCompletionsResponse(
     val range: StatisticsRange,
     val heatmap: List<HeatmapDay>,
@@ -14,15 +11,13 @@ data class StatisticsCompletionsResponse(
 )
 
 @Immutable
-@Serializable
 data class StatisticsRange(
     val from: String,          // 2025-10-01T00:00:00+09:00
-    @SerialName("toExclusive") val toExclusive: String,
+    val toExclusive: String,
     val tz: String
 )
 
 @Immutable
-@Serializable
 data class HeatmapDay(
     val date: String,          // YYYY-MM-DD (tz 기준)
     val count: Int,            // 완료 루틴 수(분자)
@@ -35,9 +30,8 @@ data class HeatmapDay(
 }
 
 @Immutable
-@Serializable
 data class RoutineDays(
-    @SerialName("routine_id") val routineId: String,
+    val routineId: String,
     val name: String = "",
     val days: List<Int>        // 해당 달 일수길이의 0/1 배열
 )

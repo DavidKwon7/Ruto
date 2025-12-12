@@ -21,7 +21,7 @@ private object SettingsKeys {
 
 @Singleton
 class SettingRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     val themeMode: Flow<ThemeMode> =
         context.settingsDataStore.data.map { prefs ->

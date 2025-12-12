@@ -6,14 +6,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserProfileEntity(
+data class UserProfileDto(
     @SerialName("user_id") val userId: String,
     val nickname: String,
     @SerialName("avatar_path") val avatarPath: String? = null,
     @SerialName("avatar_version") val avatarVersion: Int = 0,
 )
 
-fun UserProfileEntity.toDomain(avatarUrl: String?): UserProfile =
+fun UserProfileDto.toDomain(avatarUrl: String?): UserProfile =
     UserProfile(
         nickname = nickname.ifBlank { DEFAULT_NICKNAME },
         avatarUrl = avatarUrl,

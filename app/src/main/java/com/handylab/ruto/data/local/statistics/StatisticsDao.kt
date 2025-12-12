@@ -8,10 +8,10 @@ import androidx.room.Query
 @Dao
 interface StatisticsDao {
     @Query("SELECT * FROM statistics_cache WHERE `key` = :key LIMIT 1")
-    suspend fun get(key: String): StatisticsLocal?
+    suspend fun get(key: String): StatisticsEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsert(item: StatisticsLocal)
+    suspend fun upsert(item: StatisticsEntity)
 
     @Query("DELETE FROM statistics_cache WHERE updatedAt < :expiredBefore")
     suspend fun purge(expiredBefore: Long)

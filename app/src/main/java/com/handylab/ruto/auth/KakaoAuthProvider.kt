@@ -1,7 +1,7 @@
 package com.handylab.ruto.auth
 
 import android.app.Activity
-import com.handylab.ruto.domain.IdTokenPayload
+import com.handylab.ruto.domain.auth.IdTokenPayload
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Kakao
