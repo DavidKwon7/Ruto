@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.provider.Settings
 import com.handylab.ruto.data.security.SecureStore
-import com.handylab.ruto.domain.fcm.RegisterFcmModels
+import com.handylab.ruto.data.fcm.model.RegisterFcmModels
 import com.handylab.ruto.util.AppLogger
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging

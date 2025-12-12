@@ -1,22 +1,21 @@
 package com.handylab.ruto.domain.routine
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import androidx.compose.runtime.Immutable
 
-@Serializable
+@Immutable
 data class CompleteItem(
-    @SerialName("routine_id") val routineId: String,
-    @SerialName("completed_at") val completedAt: String, // ISO-8601 UTC, e.g. 2025-10-15T09:20:00Z
-    @SerialName("op_id")val opId: String         // 멱등키(UUID)
+    val routineId: String,
+    val completedAt: String, // ISO-8601 UTC, e.g. 2025-10-15T09:20:00Z
+    val opId: String         // 멱등키(UUID)
 )
 
-@Serializable
+@Immutable
 data class CompleteBatchRequest(
-    val items: List<CompleteItem>
+    val items: List<CompleteItem>,
 )
 
-@Serializable
+@Immutable
 data class CompleteBatchResponse(
     val ok: Boolean,
-    val processed: Int
+    val processed: Int,
 )

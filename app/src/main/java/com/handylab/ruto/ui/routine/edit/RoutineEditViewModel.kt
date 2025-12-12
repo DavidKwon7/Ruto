@@ -6,10 +6,12 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.handylab.ruto.data.routine.RoutineRepository
 import com.handylab.ruto.domain.routine.RoutineCadence
 import com.handylab.ruto.domain.routine.RoutineRead
 import com.handylab.ruto.domain.routine.RoutineUpdateRequest
+import com.handylab.ruto.domain.routine.usecase.DeleteRoutineUseCase
+import com.handylab.ruto.domain.routine.usecase.FetchRoutineUseCase
+import com.handylab.ruto.domain.routine.usecase.UpdateRoutineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +40,9 @@ data class RoutineEditUiState(
 @HiltViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 class RoutineEditViewModel @Inject constructor(
-    private val repository: RoutineRepository,
+    private val fetchRoutineUseCase: FetchRoutineUseCase,
+    private val updateRoutineUseCase: UpdateRoutineUseCase,
+    private val deleteRoutineUseCase: DeleteRoutineUseCase,
     savedState: SavedStateHandle
 ) : ViewModel() {
     private val routineId: String = checkNotNull(savedState["id"])
@@ -51,7 +55,7 @@ class RoutineEditViewModel @Inject constructor(
     private fun load() {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null) }
-            repository.getRoutine(routineId)
+            fetchRoutineUseCase(routineId)
                 .onSuccess { r ->
                     _uiState.update {
                         it.copy(
@@ -99,7 +103,7 @@ class RoutineEditViewModel @Inject constructor(
                 tags = s.tags
             )
 
-            repository.updateRoutine(req)
+            updateRoutineUseCase(req)
                 .onSuccess { ok ->
                     _uiState.update { it.copy(saving = false, saved = ok) }
                 }
@@ -112,7 +116,7 @@ class RoutineEditViewModel @Inject constructor(
     fun delete(onDone: () -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(saving = true, error = null) }
-            repository.deleteRoutine(routineId)
+            deleteRoutineUseCase(routineId)
                 .onSuccess { ok ->
                     _uiState.update { it.copy(saving = false) }
                     if (ok) onDone()

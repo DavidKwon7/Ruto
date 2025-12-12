@@ -3,6 +3,7 @@ package com.handylab.ruto.data.profile
 import android.content.Context
 import android.net.Uri
 import com.handylab.ruto.domain.profile.DEFAULT_NICKNAME
+import com.handylab.ruto.domain.profile.ProfileRepository
 import com.handylab.ruto.domain.profile.UserProfile
 import com.handylab.ruto.util.AppLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,11 +16,11 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 
-class ProfileRepository @Inject constructor(
+class ProfileRepositoryImpl @Inject constructor(
     private val supabase: SupabaseClient,
     private val logger: AppLogger,
     @ApplicationContext private val context: Context,
-) {
+) : ProfileRepository {
 
     private suspend fun currentUserId(): String {
         val session = supabase.auth.currentSessionOrNull()
@@ -45,7 +46,7 @@ class ProfileRepository @Inject constructor(
         }
     }
 
-    suspend fun loadProfile(): UserProfile {
+    override suspend fun loadProfile(): UserProfile {
         val userId = currentUserId()
 
         val rows = supabase.postgrest["app_user_profiles"]
@@ -56,7 +57,6 @@ class ProfileRepository @Inject constructor(
 
         val row = rows.firstOrNull()
         if (row == null) {
-            // 아직 프로필 레코드가 없을 때: 기본값
             return UserProfile(
                 nickname = DEFAULT_NICKNAME,
                 avatarUrl = null,
@@ -68,7 +68,7 @@ class ProfileRepository @Inject constructor(
         return row.toDomain(avatarUrl)
     }
 
-    suspend fun updateNickname(newNickname: String): UserProfile {
+    override suspend fun updateNickname(newNickname: String): UserProfile {
         val userId = currentUserId()
         val nickname = newNickname.ifBlank { DEFAULT_NICKNAME }
 
@@ -99,8 +99,7 @@ class ProfileRepository @Inject constructor(
         return row.toDomain(avatarUrl)
     }
 
-
-    suspend fun updateAvatar(avatarUri: Uri): UserProfile {
+    override suspend fun updateAvatar(avatarUri: Uri): UserProfile {
         val userId = currentUserId()
         val path = avatarPath(userId)
 

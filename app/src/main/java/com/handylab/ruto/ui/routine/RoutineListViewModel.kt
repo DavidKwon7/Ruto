@@ -5,9 +5,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.handylab.ruto.data.routine.RoutineRepository
 import com.handylab.ruto.data.sync.CompleteQueue
 import com.handylab.ruto.domain.routine.RoutineRead
+import com.handylab.ruto.domain.routine.usecase.ObserveRoutineListUseCase
+import com.handylab.ruto.domain.routine.usecase.ObserveTodayCompletionIdsUseCase
+import com.handylab.ruto.domain.routine.usecase.RefreshRoutinesUseCase
+import com.handylab.ruto.domain.routine.usecase.SetRoutineCompletionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +38,10 @@ data class Item(
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class RoutineListViewModel @Inject constructor(
-    private val repository: RoutineRepository,
+    observeRoutineListUseCase: ObserveRoutineListUseCase,
+    observeTodayCompletionIdsUseCase: ObserveTodayCompletionIdsUseCase,
+    private val refreshRoutinesUseCase: RefreshRoutinesUseCase,
+    private val setRoutineCompletionUseCase: SetRoutineCompletionUseCase,
     private val queue: CompleteQueue
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RoutineListUiState(loading = true))
@@ -45,7 +51,7 @@ class RoutineListViewModel @Inject constructor(
 
     init {
         // 루틴 목록 스트림
-        repository.observeRoutineList()
+        observeRoutineListUseCase()
             .onEach { list ->
                 _uiState.update { state ->
                     state.copy(
@@ -57,9 +63,8 @@ class RoutineListViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         // 오늘 완료 스트림
-        repository.observeTodayCompletions()
-            .onEach { rows ->
-                val set = rows.filter { it.completed }.map { it.routineId }.toSet()
+        observeTodayCompletionIdsUseCase()
+            .onEach { set ->
                 doneToday.value = set
                 // 목록에 반영
                 _uiState.update { state ->
@@ -72,14 +77,14 @@ class RoutineListViewModel @Inject constructor(
 
         // 최초 서버 동기화 (화면 진입 시 1회)
         viewModelScope.launch {
-            runCatching { repository.refreshFromServer() }
+            runCatching { refreshRoutinesUseCase() }
         }
     }
 
     // 수동 새로고침용
     fun refresh() {
         viewModelScope.launch {
-            runCatching { repository.refreshFromServer() }
+            runCatching { refreshRoutinesUseCase() }
         }
     }
 
@@ -97,7 +102,7 @@ class RoutineListViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            repository.setCompletionLocal(r.id, completed = toCompleted)
+            setRoutineCompletionUseCase(r.id, completed = toCompleted)
         }
 
         if (toCompleted) {

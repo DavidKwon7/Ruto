@@ -7,11 +7,11 @@ import com.handylab.ruto.data.local.RoutineCompletionLocal
 import com.handylab.ruto.data.local.routine.RoutineDao
 import com.handylab.ruto.data.local.routine.toDomain
 import com.handylab.ruto.data.security.SecureStore
-import com.handylab.ruto.data.statistics.model.HeatmapDay
-import com.handylab.ruto.data.statistics.model.RoutineDays
-import com.handylab.ruto.data.statistics.model.StatisticsCompletionsResponse
-import com.handylab.ruto.data.statistics.model.StatsRange
 import com.handylab.ruto.domain.routine.RoutineRead
+import com.handylab.ruto.domain.routine.HeatmapDay
+import com.handylab.ruto.domain.routine.RoutineDays
+import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
+import com.handylab.ruto.domain.routine.StatisticsRange
 import com.handylab.ruto.util.ensureGuestId
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -137,7 +137,7 @@ class LiveMonthlyStatsCalculator @Inject constructor(
         // range 값 (서버 응답과 동일한 형태)
         val fromIsoLocal = from.atStartOfDay(zone).toOffsetDateTime().toString()
         val toIsoLocal = toEx.atStartOfDay(zone).toOffsetDateTime().toString()
-        val range = StatsRange(
+        val range = StatisticsRange(
             from = fromIsoLocal,
             toExclusive = toIsoLocal,
             tz = zone.id

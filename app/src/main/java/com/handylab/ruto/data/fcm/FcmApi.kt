@@ -1,9 +1,9 @@
 package com.handylab.ruto.data.fcm
 
 import com.handylab.ruto.BuildConfig
+import com.handylab.ruto.data.fcm.model.RegisterFcmModels
+import com.handylab.ruto.data.fcm.model.SetFCMEnabledModels
 import com.handylab.ruto.data.security.SecureStore
-import com.handylab.ruto.domain.fcm.RegisterFcmModels
-import com.handylab.ruto.domain.fcm.SetFCMEnabledModels
 import com.handylab.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
 import io.ktor.client.HttpClient

@@ -3,8 +3,10 @@ package com.handylab.ruto.ui.setting.profile
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.handylab.ruto.data.profile.ProfileRepository
 import com.handylab.ruto.domain.profile.DEFAULT_NICKNAME
+import com.handylab.ruto.domain.profile.usecase.LoadProfileUseCase
+import com.handylab.ruto.domain.profile.usecase.UpdateAvatarUseCase
+import com.handylab.ruto.domain.profile.usecase.UpdateNicknameUseCase
 import com.handylab.ruto.ui.setting.ProfileUiState
 import com.handylab.ruto.util.AppLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +19,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileEditViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository,
+    private val loadProfileUseCase: LoadProfileUseCase,
+    private val updateNicknameUseCase: UpdateNicknameUseCase,
+    private val updateAvatarUseCase: UpdateAvatarUseCase,
     private val logger: AppLogger
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState(loading = true))
@@ -36,7 +40,7 @@ class ProfileEditViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null) }
-            runCatching { profileRepository.loadProfile() }
+            runCatching { loadProfileUseCase() }
                 .onSuccess { profile ->
                     originalNickname = profile.nickname
                     originalAvatarUrl = profile.avatarUrl
@@ -81,18 +85,18 @@ class ProfileEditViewModel @Inject constructor(
             _uiState.update { it.copy(saving = true, error = null) }
 
             runCatching {
-                var latestProfile = profileRepository.loadProfile()
+                var latestProfile = loadProfileUseCase()
 
                 // 아바타가 변경된 경우
                 pendingAvatarUri?.let { uri ->
-                    latestProfile = profileRepository.updateAvatar(uri)
+                    latestProfile = updateAvatarUseCase(uri)
                     pendingAvatarUri = null
                 }
 
                 // 닉네임이 변경된 경우
                 val trimmedNickname = current.nickname.trim().ifBlank { DEFAULT_NICKNAME }
                 if (trimmedNickname != latestProfile.nickname) {
-                    latestProfile = profileRepository.updateNickname(trimmedNickname)
+                    latestProfile = updateNicknameUseCase(trimmedNickname)
                 }
 
                 latestProfile

@@ -5,9 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.handylab.ruto.data.routine.RoutineRepository
 import com.handylab.ruto.domain.routine.RoutineCadence
 import com.handylab.ruto.domain.routine.RoutineTag
+import com.handylab.ruto.domain.routine.usecase.RegisterRoutineUseCase
 import com.handylab.ruto.ui.event.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -36,7 +36,7 @@ data class RoutineFormState(
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class RoutineCreateViewModel @Inject constructor(
-    private val repo: RoutineRepository
+    private val registerRoutineUseCase: RegisterRoutineUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RoutineFormState())
     val uiState: StateFlow<RoutineFormState> = _uiState
@@ -57,7 +57,7 @@ class RoutineCreateViewModel @Inject constructor(
         val s = _uiState.value
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null, savedId = null) }
-            repo.registerRoutine(
+            registerRoutineUseCase(
                 name = s.name,
                 cadence = s.cadence,
                 startDate = s.startDate,

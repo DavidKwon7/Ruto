@@ -1,4 +1,4 @@
-package com.handylab.ruto.domain.fcm
+package com.handylab.ruto.data.fcm.model
 
 import kotlinx.serialization.Serializable
 
