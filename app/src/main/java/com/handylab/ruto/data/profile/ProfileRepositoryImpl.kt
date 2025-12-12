@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.minutes
 class ProfileRepositoryImpl @Inject constructor(
     private val supabase: SupabaseClient,
     private val logger: AppLogger,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : ProfileRepository {
 
     private suspend fun currentUserId(): String {

@@ -36,7 +36,8 @@ class RoutineApi @Inject constructor(
     private val client: HttpClient,
     private val supabase: SupabaseClient,
     private val secure: SecureStore,
-    private val logger: AppLogger
+    private val logger: AppLogger,
+    private val json: Json,
 ) {
     private val base = BuildConfig.SUPABASE_URL
 
@@ -78,11 +79,7 @@ class RoutineApi @Inject constructor(
         if (!resp.status.isSuccess()) {
             throw IllegalStateException("get-routine failed: ${resp.status} $raw")
         }
-        return Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-            explicitNulls = false
-        }.decodeFromString<RoutineReadDto>(raw).toDomain()
+        return json.decodeFromString<RoutineReadDto>(raw).toDomain()
     }
 
     suspend fun updateRoutine(req: RoutineUpdateRequest): RoutineUpdateResponse =

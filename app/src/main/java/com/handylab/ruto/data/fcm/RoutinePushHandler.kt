@@ -32,7 +32,7 @@ class RoutinePushHandler @Inject constructor(
     private val supabase: SupabaseClient,
     private val secure: SecureStore,
     private val logger: AppLogger,
-    @ApplicationContext private val appContext: Context
+    @param:ApplicationContext private val appContext: Context
 ) {
     private val KEY_FCM_TOKEN = "fcm_token"                 // 마지막 업로드 성공 토큰
     private val KEY_FCM_TOKEN_PENDING = "fcm_token_pending" // 아직 서버 반영 전 토큰(앱 재시작 복구용)
