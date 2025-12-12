@@ -115,7 +115,6 @@ kotlin {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -135,46 +134,28 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
-
-    implementation("androidx.navigation:navigation-compose:2.8.0")
-
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.2.2"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
-    // implementation("io.github.jan-tennert.supabase:gotrue-kt")
-    implementation("com.google.android.gms:play-services-auth:21.4.0")
+    implementation(libs.androidx.navigation.compose)
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.postgrest)
+    implementation(libs.play.services.auth)
     implementation(libs.supabase.storage)
     implementation(libs.kakao.sdk.user)
-
-    // ktor
-    implementation("io.ktor:ktor-client-android:3.2.3")
+    implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
-
     implementation(libs.kotlinx.serialization.json)
-
-    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-
-    // kapt("androidx.hilt:hilt-compiler:1.3.0")
-
-    // SplashScreen
     implementation(libs.core.splashscreen)
-
-    implementation("androidx.security:security-crypto:1.1.0")
-    implementation("androidx.security:security-crypto-ktx:1.1.0")
-
-    // Room
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.security.crypto.ktx)
     implementation(libs.bundles.androidx.room)
     ksp(libs.androidx.room.compiler)
-
     implementation(libs.androidx.datastore.preferences)
-
     implementation(libs.coil.compose)
 }
