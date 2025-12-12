@@ -1,6 +1,5 @@
-package com.handylab.ruto.data.statistics.model
+package com.handylab.ruto.data.statistics
 
-import androidx.compose.runtime.Immutable
 import com.handylab.ruto.domain.routine.HeatmapDay
 import com.handylab.ruto.domain.routine.RoutineDays
 import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
@@ -9,7 +8,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
 
-@Immutable
 @Serializable
 data class StatisticsCompletionsResponseDto(
     val range: StatisticsRangeDto,
@@ -46,8 +44,6 @@ fun StatisticsCompletionsResponse.toDto() = StatisticsCompletionsResponseDto(
     },
 )
 
-
-@Immutable
 @Serializable
 data class RoutineDaysDto(
     @SerialName("routine_id") val routineId: String,
@@ -61,7 +57,6 @@ data class RoutineDaysDto(
     )
 }
 
-@Immutable
 @Serializable
 data class StatisticsRangeDto(
     val from: String,        // ISO-8601 local "YYYY-MM-01T00:00:00+09:00" 등
@@ -75,7 +70,6 @@ data class StatisticsRangeDto(
     )
 }
 
-@Immutable
 @Serializable
 data class HeatmapDayDto(
     val date: String,   // "YYYY-MM-DD"

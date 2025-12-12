@@ -5,7 +5,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.handylab.ruto.data.local.complete.PendingComplete
+import com.handylab.ruto.data.local.complete.PendingCompleteEntity
 import com.handylab.ruto.data.local.complete.PendingCompleteDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,7 +21,7 @@ class CompleteQueue @Inject constructor(
 ) {
     suspend fun enqueue(routineId: String, completedAt: Instant) {
         val opId = UUID.randomUUID().toString()
-        val item = PendingComplete(
+        val item = PendingCompleteEntity(
             opId = opId,
             routineId = routineId,
             completedAtIso = completedAt.toString() // Instant -> ISO-8601 UTC

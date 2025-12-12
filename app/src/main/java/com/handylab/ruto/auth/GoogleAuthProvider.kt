@@ -3,7 +3,7 @@ package com.handylab.ruto.auth
 import android.app.Activity
 import android.os.Build
 import android.util.Log
-import com.handylab.ruto.domain.IdTokenPayload
+import com.handylab.ruto.domain.auth.IdTokenPayload
 import kotlin.coroutines.cancellation.CancellationException
 
 class GoogleAuthProvider(

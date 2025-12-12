@@ -3,10 +3,10 @@ package com.handylab.ruto.data.routine
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.handylab.ruto.data.local.statistics.StatisticsDao
-import com.handylab.ruto.data.local.statistics.StatisticsLocal
+import com.handylab.ruto.data.local.statistics.StatisticsEntity
 import com.handylab.ruto.data.statistics.LiveMonthlyStatsCalculator
-import com.handylab.ruto.data.statistics.model.StatisticsCompletionsResponseDto
-import com.handylab.ruto.data.statistics.model.toDto
+import com.handylab.ruto.data.statistics.StatisticsCompletionsResponseDto
+import com.handylab.ruto.data.statistics.toDto
 import com.handylab.ruto.domain.routine.RoutineStatisticsRepository
 import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
 import com.handylab.ruto.util.AppLogger
@@ -40,7 +40,7 @@ class RoutineStatisticsRepositoryImpl @Inject constructor(
                     val dto = fresh.toDto()
                     val key = "$month|$tz|${currentScope()}|"
                     val payload = json.encodeToString(StatisticsCompletionsResponseDto.serializer(), dto)
-                    statisticsDao.upsert(StatisticsLocal(key, payload, System.currentTimeMillis()))
+                    statisticsDao.upsert(StatisticsEntity(key, payload, System.currentTimeMillis()))
                 }
                 .onFailure { it ->
                     logger.e("AuthRepository", "restore via refresh failed", it)

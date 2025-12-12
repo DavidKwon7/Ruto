@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "pending_completes")
-data class PendingComplete(
+data class PendingCompleteEntity(
     @PrimaryKey val opId: String,        // 멱등키
     val routineId: String,
     val completedAtIso: String           // ISO-8601(UTC)

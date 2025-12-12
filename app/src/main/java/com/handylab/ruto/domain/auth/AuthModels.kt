@@ -1,4 +1,4 @@
-package com.handylab.ruto.domain
+package com.handylab.ruto.domain.auth
 
 import androidx.compose.runtime.Immutable
 

@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.handylab.ruto.data.fcm.RoutinePushHandler
-import com.handylab.ruto.domain.AuthState
+import com.handylab.ruto.domain.auth.AuthState
 import com.handylab.ruto.ui.auth.AuthViewModel
 import com.handylab.ruto.ui.setting.SettingViewModel
 import com.handylab.ruto.ui.setting.ThemeMode

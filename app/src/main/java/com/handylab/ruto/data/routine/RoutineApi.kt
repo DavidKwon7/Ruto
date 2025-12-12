@@ -1,19 +1,8 @@
 package com.handylab.ruto.data.routine
 
 import com.handylab.ruto.BuildConfig
-import com.handylab.ruto.data.routine.model.CompleteBatchRequestDto
-import com.handylab.ruto.data.routine.model.CompleteBatchResponseDto
-import com.handylab.ruto.data.routine.model.CompleteItemDto
-import com.handylab.ruto.data.routine.model.RoutineCreateRequestDto
-import com.handylab.ruto.data.routine.model.RoutineCreateResponseDto
-import com.handylab.ruto.data.routine.model.RoutineDeleteRequestDto
-import com.handylab.ruto.data.routine.model.RoutineDeleteResponseDto
-import com.handylab.ruto.data.routine.model.RoutineListResponseDto
-import com.handylab.ruto.data.routine.model.RoutineReadDto
-import com.handylab.ruto.data.routine.model.RoutineUpdateRequestDto
-import com.handylab.ruto.data.routine.model.RoutineUpdateResponseDto
 import com.handylab.ruto.data.security.SecureStore
-import com.handylab.ruto.data.statistics.model.StatisticsCompletionsResponseDto
+import com.handylab.ruto.data.statistics.StatisticsCompletionsResponseDto
 import com.handylab.ruto.domain.routine.CompleteBatchRequest
 import com.handylab.ruto.domain.routine.CompleteBatchResponse
 import com.handylab.ruto.domain.routine.CompleteItem

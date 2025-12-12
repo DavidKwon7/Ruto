@@ -1,9 +1,9 @@
 package com.handylab.ruto.data.auth
 
 import com.handylab.ruto.data.security.SecureStore
-import com.handylab.ruto.domain.AuthState
-import com.handylab.ruto.domain.IdTokenPayload
-import com.handylab.ruto.domain.SocialProvider
+import com.handylab.ruto.domain.auth.AuthState
+import com.handylab.ruto.domain.auth.IdTokenPayload
+import com.handylab.ruto.domain.auth.SocialProvider
 import com.handylab.ruto.util.AppLogger
 import com.handylab.ruto.util.withRetry
 import io.github.jan.supabase.SupabaseClient

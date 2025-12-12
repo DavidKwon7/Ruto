@@ -1,6 +1,5 @@
-package com.handylab.ruto.data.routine.model
+package com.handylab.ruto.data.routine
 
-import androidx.compose.runtime.Immutable
 import com.handylab.ruto.domain.routine.CompleteBatchRequest
 import com.handylab.ruto.domain.routine.CompleteBatchResponse
 import com.handylab.ruto.domain.routine.CompleteItem
@@ -15,7 +14,6 @@ import com.handylab.ruto.domain.routine.RoutineUpdateResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Immutable
 @Serializable
 data class RoutineCreateRequestDto(
     val name: String,
@@ -41,7 +39,6 @@ data class RoutineCreateRequestDto(
     }
 }
 
-@Immutable
 @Serializable
 data class RoutineCreateResponseDto(
     val id: String,
@@ -53,7 +50,6 @@ data class RoutineCreateResponseDto(
     )
 }
 
-@Immutable
 @Serializable
 data class RoutineReadDto(
     val id: String,
@@ -79,7 +75,6 @@ data class RoutineReadDto(
     )
 }
 
-@Immutable
 @Serializable
 data class RoutineListResponseDto(
     val items: List<RoutineReadDto>
@@ -87,7 +82,6 @@ data class RoutineListResponseDto(
     fun toDomain() = RoutineListResponse(items = items.map { it.toDomain() })
 }
 
-@Immutable
 @Serializable
 data class RoutineUpdateRequestDto(
     val id: String,
@@ -115,23 +109,19 @@ data class RoutineUpdateRequestDto(
     }
 }
 
-@Immutable
 @Serializable
 data class RoutineUpdateResponseDto(val ok: Boolean) {
     fun toDomain() = RoutineUpdateResponse(ok = ok)
 }
 
-@Immutable
 @Serializable
 data class RoutineDeleteRequestDto(val id: String)
 
-@Immutable
 @Serializable
 data class RoutineDeleteResponseDto(val ok: Boolean) {
     fun toDomain() = RoutineDeleteResponse(ok = ok)
 }
 
-@Immutable
 @Serializable
 data class CompleteItemDto(
     @SerialName("routine_id") val routineId: String,
@@ -147,7 +137,6 @@ data class CompleteItemDto(
     }
 }
 
-@Immutable
 @Serializable
 data class CompleteBatchRequestDto(
     val items: List<CompleteItemDto>
@@ -159,7 +148,6 @@ data class CompleteBatchRequestDto(
     }
 }
 
-@Immutable
 @Serializable
 data class CompleteBatchResponseDto(
     val ok: Boolean,
