@@ -22,3 +22,11 @@ local.properties
 *.ipa
 *.obb
 /upload_certificate.pem
+
+# --- Claude AI Tooling ---
+.claude/
+claude.md
+
+# --- Android / IDE ---
+.idea/deploymentTargetSelector.xml
+.idea/misc.xml
