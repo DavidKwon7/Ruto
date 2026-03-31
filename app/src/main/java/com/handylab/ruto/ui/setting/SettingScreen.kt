@@ -199,25 +199,25 @@ private fun SettingContent(
             isGuest = isGuest,
             onClickEdit = onClickEditProfile
         )
-        Spacer(Modifier.padding(vertical = 12.dp))
+        Spacer(Modifier.height(12.dp))
 
         PushSettingSection(
             ui = pushUi,
             onToggle = onPushToggle
         )
 
-        Spacer(Modifier.padding(vertical = 12.dp))
+        Spacer(Modifier.height(12.dp))
 
         ThemeSettingSection(
             themeMode = themeMode,
             onThemeChange = onThemeChange
         )
 
-        Spacer(Modifier.padding(vertical = 12.dp))
+        Spacer(Modifier.height(12.dp))
 
         AppVersionSection(appVersion = appVersion)
 
-        Spacer(Modifier.padding(vertical = 12.dp))
+        Spacer(Modifier.height(12.dp))
 
         LogoutSection(
             loading = authUi.loading,

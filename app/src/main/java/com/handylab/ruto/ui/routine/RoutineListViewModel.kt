@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -47,33 +48,16 @@ class RoutineListViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RoutineListUiState(loading = true))
     val uiState: StateFlow<RoutineListUiState> = _uiState.asStateFlow()
 
-    private val doneToday = MutableStateFlow<Set<String>>(emptySet())
-
     init {
-        // 루틴 목록 스트림
-        observeRoutineListUseCase()
-            .onEach { list ->
-                _uiState.update { state ->
-                    state.copy(
-                        loading = false,
-                        items = list.map { r -> Item(r, completedToday = r.id in doneToday.value) }
-                    )
-                }
-            }
-            .launchIn(viewModelScope)
-
-        // 오늘 완료 스트림
-        observeTodayCompletionIdsUseCase()
-            .onEach { set ->
-                doneToday.value = set
-                // 목록에 반영
-                _uiState.update { state ->
-                    state.copy(
-                        items = state.items.map { it.copy(completedToday = it.routine.id in set) }
-                    )
-                }
-            }
-            .launchIn(viewModelScope)
+        // 루틴 목록과 오늘 완료 set을 combine으로 원자적으로 합산
+        combine(
+            observeRoutineListUseCase(),
+            observeTodayCompletionIdsUseCase()
+        ) { list, doneSet ->
+            list.map { r -> Item(r, completedToday = r.id in doneSet) }
+        }.onEach { items ->
+            _uiState.update { it.copy(loading = false, items = items) }
+        }.launchIn(viewModelScope)
 
         // 최초 서버 동기화 (화면 진입 시 1회)
         viewModelScope.launch {

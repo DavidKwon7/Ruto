@@ -32,6 +32,10 @@ fun ProfileEditScreen(
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val ui by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(ui.saved) {
+        if (ui.saved) navController.popBackStack()
+    }
+
     val userId = authState.userIdOrNull
     val avatarCacheKey = remember(userId, ui.avatarVersion) {
         userId?.let { "avatar_${it}_v${ui.avatarVersion}" }
@@ -72,10 +76,7 @@ fun ProfileEditScreen(
             avatarCacheKey = avatarCacheKey,
             onAvatarClick = { imagePickerLauncher.launch("image/*") },
             onNicknameChange = viewModel::onNicknameChange,
-            onClickSave = {
-                viewModel.onSave()
-                // navController.popBackStack()
-            }
+            onClickSave = { viewModel.onSave() }
         )
     }
 }

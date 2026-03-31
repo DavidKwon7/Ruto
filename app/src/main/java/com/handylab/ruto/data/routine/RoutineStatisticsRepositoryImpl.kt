@@ -9,7 +9,9 @@ import com.handylab.ruto.data.statistics.StatisticsCompletionsResponseDto
 import com.handylab.ruto.data.statistics.toDto
 import com.handylab.ruto.domain.routine.RoutineStatisticsRepository
 import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
+import com.handylab.ruto.data.security.SecureStore
 import com.handylab.ruto.util.AppLogger
+import com.handylab.ruto.util.ensureGuestId
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +28,7 @@ class RoutineStatisticsRepositoryImpl @Inject constructor(
     private val api: RoutineApi,
     private val statisticsDao: StatisticsDao,
     private val supabase: SupabaseClient,
+    private val secure: SecureStore,
     private val json: Json,
     private val live: LiveMonthlyStatsCalculator,
     private val logger: AppLogger
@@ -43,13 +46,13 @@ class RoutineStatisticsRepositoryImpl @Inject constructor(
                     statisticsDao.upsert(StatisticsEntity(key, payload, System.currentTimeMillis()))
                 }
                 .onFailure { it ->
-                    logger.e("AuthRepository", "restore via refresh failed", it)
+                    logger.e("RoutineStatisticsRepository", "fetchMonthlyCompletions failed", it)
                 }
         }
     }
 
     private fun currentScope(): String {
-        val uid = supabase.auth.currentUserOrNull()?.id
-        return uid ?: "guest:${supabase.auth.currentSessionOrNull()?.user?.id ?: "anonymous"}"
+        val uid = supabase.auth.currentSessionOrNull()?.user?.id
+        return if (uid != null) "user:$uid" else "guest:${ensureGuestId(secure)}"
     }
 }

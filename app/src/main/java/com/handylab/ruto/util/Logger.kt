@@ -13,7 +13,7 @@ class LogcatLogger @Inject constructor() : AppLogger {
         android.util.Log.d(tag, msg)
 
     override fun w(tag: String, msg: String, t: Throwable?) =
-        android.util.Log.w(tag, msg)
+        android.util.Log.w(tag, msg, t)
 
 
     override fun e(tag: String, msg: String, t: Throwable?) =

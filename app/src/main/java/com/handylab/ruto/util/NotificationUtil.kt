@@ -11,7 +11,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.handylab.ruto.R
 
 object NotificationUtil {
-    private const val CHANNEL_ID = "routine_channel"
+    const val CHANNEL_ID = "routine"
 
     fun ensureChannel(ctx: Context) {
         if (Build.VERSION.SDK_INT >= 26) {

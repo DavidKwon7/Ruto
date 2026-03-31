@@ -34,7 +34,6 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
-        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

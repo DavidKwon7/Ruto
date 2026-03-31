@@ -14,7 +14,6 @@ import com.handylab.ruto.domain.routine.RoutineRead
 import com.handylab.ruto.domain.routine.RoutineUpdateRequest
 import com.handylab.ruto.domain.routine.RoutineUpdateResponse
 import com.handylab.ruto.domain.routine.StatisticsCompletionsResponse
-import com.handylab.ruto.util.AppLogger
 import com.handylab.ruto.util.applyAuthHeaders
 import io.github.jan.supabase.SupabaseClient
 import io.ktor.client.HttpClient
@@ -36,7 +35,6 @@ class RoutineApi @Inject constructor(
     private val client: HttpClient,
     private val supabase: SupabaseClient,
     private val secure: SecureStore,
-    private val logger: AppLogger,
     private val json: Json,
 ) {
     private val base = BuildConfig.SUPABASE_URL
@@ -73,13 +71,11 @@ class RoutineApi @Inject constructor(
             header(HttpHeaders.Accept, "application/json")
             applyAuthHeaders(supabase, secure) // Authorization or X-Guest-Id
         }
-        val raw = resp.bodyAsText()
-        logger.e("RoutineApi-getRoutine", raw)
-
         if (!resp.status.isSuccess()) {
-            throw IllegalStateException("get-routine failed: ${resp.status} $raw")
+            val errorBody = resp.bodyAsText()
+            throw IllegalStateException("get-routine failed: ${resp.status} $errorBody")
         }
-        return json.decodeFromString<RoutineReadDto>(raw).toDomain()
+        return resp.body<RoutineReadDto>().toDomain()
     }
 
     suspend fun updateRoutine(req: RoutineUpdateRequest): RoutineUpdateResponse =
@@ -120,7 +116,8 @@ class RoutineApi @Inject constructor(
             applyAuthHeaders(supabase, secure)
         }
         if (!resp.status.isSuccess()) {
-            throw IllegalStateException("monthly fetch failed: ${resp.status} ${resp.body<String>()}")
+            val errorBody = resp.bodyAsText()
+            throw IllegalStateException("monthly fetch failed: ${resp.status} $errorBody")
         }
         return resp.body<StatisticsCompletionsResponseDto>().toDomain()
     }

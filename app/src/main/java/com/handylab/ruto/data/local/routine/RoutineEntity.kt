@@ -30,7 +30,7 @@ fun RoutineEntity.toDomain(): RoutineRead =
     RoutineRead(
         id = id,
         name = name,
-        cadence = RoutineCadence.valueOf(cadence),
+        cadence = RoutineCadence.entries.firstOrNull { it.name == cadence } ?: RoutineCadence.DAILY,
         startDate = start_date,
         endDate = end_date,
         notifyEnabled = notify_enabled,

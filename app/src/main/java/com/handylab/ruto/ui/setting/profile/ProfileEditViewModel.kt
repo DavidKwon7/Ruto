@@ -110,7 +110,8 @@ class ProfileEditViewModel @Inject constructor(
                     avatarUrl = profile.avatarUrl,
                     avatarVersion = profile.avatarVersion,
                     saving = false,
-                    error = null
+                    error = null,
+                    saved = true,
                 )
             }.onFailure { e ->
                 logger.e("ProfileEditVM", "save fail", e)

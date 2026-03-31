@@ -37,6 +37,7 @@ data class ProfileUiState(
     val avatarUrl: String? = null,
     val avatarVersion: Int = 0,
     val error: String? = null,
+    val saved: Boolean = false,
 )
 
 @HiltViewModel
